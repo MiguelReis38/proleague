@@ -1,0 +1,166 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  championships Championship[]
+  subscription  Subscription?
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  planType  String   @default("FREE") // FREE, PRO, PREMIUM
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Championship {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  logoUrl     String?
+  rules       String?
+  
+  // Custom points settings
+  winPoints         Int @default(3)
+  drawPoints        Int @default(1)
+  losePoints        Int @default(0)
+  goalPoints        Int @default(0)
+  participationPoints Int @default(0)
+  yellowCardPoints  Int @default(0)
+  redCardPoints     Int @default(0)
+  
+  // Lineup config
+  playersPerTeam    Int @default(7)
+  
+  // Categories enabled
+  catAEnabled       Boolean @default(true)
+  catBEnabled       Boolean @default(true)
+  catCEnabled       Boolean @default(true)
+  goalkeeperEnabled Boolean @default(true)
+  
+  status      String   @default("ACTIVE") // ACTIVE, FINISHED
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  players     Player[]
+  rounds      Round[]
+}
+
+model Player {
+  id             String       @id @default(uuid())
+  name           String
+  photoUrl       String?
+  number         Int?
+  category       String       // CAT_A, CAT_B, CAT_C, GOALKEEPER
+  birthDate      DateTime
+  active         Boolean      @default(true)
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  championshipId String
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+
+  matchStats     MatchStat[]
+  teamPlayers    TeamPlayer[]
+}
+
+model Round {
+  id             String       @id @default(uuid())
+  number         Int
+  closed         Boolean      @default(false)
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  championshipId String
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  
+  teams          Team[]
+  matches        Match[]
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  photoUrl  String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  roundId   String
+  round     Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  players   TeamPlayer[]
+
+  homeMatches Match[] @relation("HomeMatches")
+  awayMatches Match[] @relation("AwayMatches")
+}
+
+model TeamPlayer {
+  id        String @id @default(uuid())
+  teamId    String
+  playerId  String
+  
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, playerId])
+}
+
+model Match {
+  id          String   @id @default(uuid())
+  homeTeamId  String
+  awayTeamId  String
+  homeScore   Int      @default(0)
+  awayScore   Int      @default(0)
+  status      String   @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, FINISHED
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roundId     String
+  round       Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  homeTeam    Team     @relation("HomeMatches", fields: [homeTeamId], references: [id])
+  awayTeam    Team     @relation("AwayMatches", fields: [awayTeamId], references: [id])
+
+  stats       MatchStat[]
+}
+
+model MatchStat {
+  id          String   @id @default(uuid())
+  matchId     String
+  playerId    String
+  
+  goals       Int      @default(0)
+  assists     Int      @default(0)
+  yellowCards Int      @default(0)
+  redCards    Int      @default(0)
+  ownGoals    Int      @default(0)
+  saves       Int      @default(0)
+  
+  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  @@unique([matchId, playerId])
+}
