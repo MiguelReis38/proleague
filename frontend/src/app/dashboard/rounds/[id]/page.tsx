@@ -23,6 +23,9 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
   // Team Photo Upload State
   const [uploadingTeamPhoto, setUploadingTeamPhoto] = useState<string | null>(null);
 
+  // Team Players Popup State
+  const [activeTeamPopup, setActiveTeamPopup] = useState<any>(null);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -245,7 +248,11 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
         <h3 className="text-lg font-medium text-white mb-4">Equipes Formadas nesta Rodada</h3>
         <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
           {round.teams?.map((team: any) => (
-            <div key={team.id} className="min-w-[160px] bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-3">
+            <div 
+              key={team.id} 
+              className="min-w-[160px] bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer hover:bg-zinc-800 transition-colors"
+              onClick={() => setActiveTeamPopup(team)}
+            >
               <div className="w-16 h-16 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center border-2 border-zinc-700">
                 {team.photoUrl ? (
                   <img src={team.photoUrl} alt={team.name} className="w-full h-full object-cover" />
@@ -501,6 +508,48 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* POPUP DE DETALHES DO TIME */}
+      {activeTeamPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-zinc-800 bg-zinc-950">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center">
+                  {activeTeamPopup.photoUrl ? (
+                    <img src={activeTeamPopup.photoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="w-5 h-5 text-zinc-500" />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-white">{activeTeamPopup.name}</h3>
+              </div>
+              <button onClick={() => setActiveTeamPopup(null)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2">
+              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Elenco</h4>
+              {activeTeamPopup.players?.map((tp: any) => (
+                <div key={tp.playerId} className="flex justify-between items-center bg-zinc-950 border border-zinc-800 rounded-lg p-3">
+                  <div>
+                    <span className="font-medium text-white flex items-center gap-2">
+                      {tp.player.name}
+                      {tp.isBorrowed && <span className="bg-amber-500/20 text-amber-500 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">Emp</span>}
+                    </span>
+                    <span className="text-xs text-zinc-500">{tp.player.category}</span>
+                  </div>
+                  <span className="text-zinc-500 font-mono text-sm">{tp.player.number ? `#${tp.player.number}` : ""}</span>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t border-zinc-800 bg-zinc-950 flex justify-end">
+              <Button variant="outline" className="w-full border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800" onClick={() => setActiveTeamPopup(null)}>
+                Fechar
+              </Button>
+            </div>
           </div>
         </div>
       )}
