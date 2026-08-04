@@ -241,6 +241,27 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
+      <div className="mb-8">
+        <h3 className="text-lg font-medium text-white mb-4">Equipes Formadas nesta Rodada</h3>
+        <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+          {round.teams?.map((team: any) => (
+            <div key={team.id} className="min-w-[160px] bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center border-2 border-zinc-700">
+                {team.photoUrl ? (
+                  <img src={team.photoUrl} alt={team.name} className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="w-6 h-6 text-zinc-500" />
+                )}
+              </div>
+              <div className="text-center">
+                <h4 className="font-bold text-white">{team.name}</h4>
+                <span className="text-xs text-zinc-500">{team.players?.length || 0} Jogadores</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-4">
         {round.matches.map((match: any) => (
           <Card 
