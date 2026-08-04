@@ -103,18 +103,28 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
             <CardTitle className="text-lg">Jogadores</CardTitle>
           </CardHeader>
           <CardContent>
-            {championship.players.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhum jogador cadastrado.</p>
-            ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                 {championship.players.map((p: any) => (
-                  <div key={p.id} className="flex justify-between p-2 rounded bg-zinc-950 border border-zinc-800">
-                    <span>{p.name}</span>
-                    <span className="text-zinc-500 text-sm">{p.category}</span>
+                  <div key={p.id} className="flex justify-between items-center p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
+                        {p.photoUrl ? (
+                          <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Users className="w-4 h-4 text-zinc-500" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="block font-medium text-white text-sm">{p.name}</span>
+                        <span className="text-zinc-500 text-xs">{p.category}</span>
+                      </div>
+                    </div>
+                    <span className="text-zinc-400 font-mono text-sm bg-zinc-900 px-2 py-1 rounded">
+                      {p.number ? `#${p.number}` : "S/N"}
+                    </span>
                   </div>
                 ))}
               </div>
-            )}
           </CardContent>
         </Card>
 

@@ -84,17 +84,30 @@ export default function PlayersGlobalPage() {
                 <tbody>
                   {filteredPlayers.map((player) => (
                     <tr key={player.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-white">{player.name}</td>
+                      <td className="px-4 py-3 font-medium text-white flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
+                          {player.photoUrl ? (
+                            <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Users className="w-4 h-4 text-zinc-500" />
+                          )}
+                        </div>
+                        {player.name}
+                      </td>
                       <td className="px-4 py-3">
                         <span className="bg-zinc-800 px-2 py-1 rounded text-xs text-zinc-300">
                           {player.category}
                         </span>
                       </td>
-                      <td className="px-4 py-3 flex items-center gap-2">
-                        <Trophy className="w-3 h-3 text-emerald-500" />
-                        {player.championshipName}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-3 h-3 text-emerald-500" />
+                          {player.championshipName}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-zinc-500">-</td>
+                      <td className="px-4 py-3 text-zinc-400 font-mono">
+                        {player.number ? `#${player.number}` : "-"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
