@@ -58,4 +58,11 @@ export class MatchesService {
       }
     });
   }
+
+  async updateTeamPhoto(teamId: string, photoUrl: string) {
+    return this.prisma.team.update({
+      where: { id: teamId },
+      data: { photoUrl }
+    });
+  }
 }

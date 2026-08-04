@@ -40,4 +40,12 @@ export class MatchesController {
   ) {
     return this.matchesService.borrowPlayer(teamId, playerId);
   }
+
+  @Put('team/:teamId/photo')
+  updateTeamPhoto(
+    @Param('teamId') teamId: string,
+    @Body('photoUrl') photoUrl: string
+  ) {
+    return this.matchesService.updateTeamPhoto(teamId, photoUrl);
+  }
 }

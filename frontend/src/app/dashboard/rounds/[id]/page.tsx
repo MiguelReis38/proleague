@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Trophy, X, UserPlus } from "lucide-react";
+import { ArrowLeft, Check, Trophy, X, UserPlus, Upload, Loader2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
@@ -19,6 +19,9 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
   // Borrow Player State
   const [isBorrowing, setIsBorrowing] = useState<"HOME" | "AWAY" | null>(null);
   const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
+
+  // Team Photo Upload State
+  const [uploadingTeamPhoto, setUploadingTeamPhoto] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -117,6 +120,45 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
       }
     } catch (e) {
       alert("Erro de conexão");
+    }
+  };
+
+  const handleTeamPhotoUpload = async (teamId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setUploadingTeamPhoto(teamId);
+    try {
+      const data = new FormData();
+      data.append("file", file);
+      
+      const res = await fetchWithAuth("/upload", {
+        method: "POST",
+        body: data,
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        
+        // Atualizar foto no backend
+        const updateRes = await fetchWithAuth(`/matches/team/${teamId}/photo`, {
+          method: "PUT",
+          body: JSON.stringify({ photoUrl: result.url })
+        });
+
+        if (updateRes.ok) {
+          await loadData();
+        } else {
+          alert("Falha ao salvar a imagem do time no sistema");
+        }
+      } else {
+        alert("Falha no upload da imagem");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao enviar a imagem");
+    } finally {
+      setUploadingTeamPhoto(null);
     }
   };
 
@@ -271,7 +313,35 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
                   {/* TIME HOME */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                      <h3 className="text-xl font-bold text-emerald-400">{activeMatch.homeTeam?.name}</h3>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                          {round.teams.find((t: any) => t.id === activeMatch.homeTeamId)?.photoUrl ? (
+                            <img src={round.teams.find((t: any) => t.id === activeMatch.homeTeamId)?.photoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-5 h-5 text-zinc-500" />
+                          )}
+                          
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => handleTeamPhotoUpload(activeMatch.homeTeamId, e)}
+                            disabled={uploadingTeamPhoto === activeMatch.homeTeamId}
+                            title="Alterar escudo do time"
+                          />
+                          
+                          {uploadingTeamPhoto === activeMatch.homeTeamId ? (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 text-white animate-spin" />
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center pointer-events-none">
+                              <Upload className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-xl font-bold text-emerald-400">{activeMatch.homeTeam?.name}</h3>
+                      </div>
                       <Button size="sm" variant="outline" className="border-zinc-700 bg-zinc-950 text-xs" onClick={() => setIsBorrowing("HOME")}>
                         <UserPlus className="w-3 h-3 mr-1" /> Emprestar
                       </Button>
@@ -322,7 +392,35 @@ export default function RoundDetailsPage({ params }: { params: Promise<{ id: str
                   {/* TIME AWAY */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                      <h3 className="text-xl font-bold text-emerald-400">{activeMatch.awayTeam?.name}</h3>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                          {round.teams.find((t: any) => t.id === activeMatch.awayTeamId)?.photoUrl ? (
+                            <img src={round.teams.find((t: any) => t.id === activeMatch.awayTeamId)?.photoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-5 h-5 text-zinc-500" />
+                          )}
+                          
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => handleTeamPhotoUpload(activeMatch.awayTeamId, e)}
+                            disabled={uploadingTeamPhoto === activeMatch.awayTeamId}
+                            title="Alterar escudo do time"
+                          />
+                          
+                          {uploadingTeamPhoto === activeMatch.awayTeamId ? (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 text-white animate-spin" />
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center pointer-events-none">
+                              <Upload className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-xl font-bold text-emerald-400">{activeMatch.awayTeam?.name}</h3>
+                      </div>
                       <Button size="sm" variant="outline" className="border-zinc-700 bg-zinc-950 text-xs" onClick={() => setIsBorrowing("AWAY")}>
                         <UserPlus className="w-3 h-3 mr-1" /> Emprestar
                       </Button>
