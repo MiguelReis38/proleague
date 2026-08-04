@@ -52,19 +52,22 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
 
   const handleDownloadPDF = async () => {
     try {
-      const res = await fetchWithAuth(`/reports/championship/${id}`);
+      const res = await fetchWithAuth(`/reports/championship/${id}/leaderboard`, {
+        method: "POST",
+        body: JSON.stringify({ leaderboard })
+      });
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `relatorio-${championship?.name || 'campeonato'}.pdf`;
+        a.download = `classificacao-${championship?.name || 'campeonato'}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
       } else {
-        alert("Erro ao baixar relatório PDF");
+        alert("Erro ao baixar PDF");
       }
     } catch (e) {
       alert("Erro ao gerar PDF");
