@@ -3,29 +3,49 @@
 import { useEffect, useState, use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Users, Play, ArrowLeft, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
 export default function ChampionshipDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [championship, setChampionship] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"gerenciar" | "times" | "jogadores" | "classificacao">("gerenciar");
+
+  // Edit Player State
+  const [editingPlayer, setEditingPlayer] = useState<any>(null);
+  const [playerForm, setPlayerForm] = useState({ name: "", category: "", number: "" });
+
+  // Edit Points State
+  const [editingPointsPlayer, setEditingPointsPlayer] = useState<any>(null);
+  const [pointsForm, setPointsForm] = useState("");
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [champRes, leadRes] = await Promise.all([
+        fetchWithAuth(`/championships/${id}`),
+        fetchWithAuth(`/championships/${id}/leaderboard`)
+      ]);
+
+      if (champRes.ok) {
+        setChampionship(await champRes.json());
+      }
+      if (leadRes.ok) {
+        setLeaderboard(await leadRes.json());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetchWithAuth(`/championships/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setChampionship(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadData();
   }, [id]);
 
@@ -51,105 +71,340 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
     }
   };
 
-  if (loading) return <div className="text-zinc-400">Carregando...</div>;
+  const handleSavePlayerEdit = async () => {
+    try {
+      const res = await fetchWithAuth(`/championships/${id}/players/${editingPlayer.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: playerForm.name,
+          category: playerForm.category,
+          number: playerForm.number ? Number(playerForm.number) : null
+        })
+      });
+      if (res.ok) {
+        setEditingPlayer(null);
+        loadData();
+      } else {
+        alert("Erro ao editar jogador");
+      }
+    } catch (e) {
+      alert("Erro de conexão");
+    }
+  };
+
+  const handleSavePointsEdit = async () => {
+    try {
+      const res = await fetchWithAuth(`/championships/${id}/players/${editingPointsPlayer.id}/manual-points`, {
+        method: "PUT",
+        body: JSON.stringify({
+          points: Number(pointsForm)
+        })
+      });
+      if (res.ok) {
+        setEditingPointsPlayer(null);
+        loadData();
+      } else {
+        alert("Erro ao alterar pontuação");
+      }
+    } catch (e) {
+      alert("Erro de conexão");
+    }
+  };
+
+  if (loading && !championship) return <div className="text-zinc-400">Carregando...</div>;
   if (!championship) return <div className="text-red-400">Campeonato não encontrado.</div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/championships">
-            <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
-                <Trophy className="text-emerald-500 w-6 h-6" />
-                {championship.name}
-              </CardTitle>
-              <div className="flex items-center gap-4 mt-2 text-sm text-zinc-400">
-                <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {championship.players.length} Inscritos</span>
-                <span className="flex items-center gap-1"><Play className="w-4 h-4" /> {championship.rounds.length} Rodadas</span>
+      <div className="flex items-center gap-4 border-b border-zinc-800 pb-4">
+        <Link href="/dashboard/championships">
+          <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        </Link>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Trophy className="text-emerald-500 w-6 h-6" />
+            {championship.name}
+          </h2>
+        </div>
+      </div>
+
+      {/* TABS NAVEGAÇÃO */}
+      <div className="flex overflow-x-auto border-b border-zinc-800 scrollbar-hide">
+        <button
+          onClick={() => setActiveTab("gerenciar")}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "gerenciar" ? "border-emerald-500 text-white" : "border-transparent text-zinc-400 hover:text-white"
+          }`}
+        >
+          <Settings className="w-4 h-4 inline-block mr-2 mb-0.5" />
+          Gerenciar
+        </button>
+        <button
+          onClick={() => setActiveTab("jogadores")}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "jogadores" ? "border-emerald-500 text-white" : "border-transparent text-zinc-400 hover:text-white"
+          }`}
+        >
+          <Users className="w-4 h-4 inline-block mr-2 mb-0.5" />
+          Jogadores ({championship.players?.length || 0})
+        </button>
+        <button
+          onClick={() => setActiveTab("times")}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "times" ? "border-emerald-500 text-white" : "border-transparent text-zinc-400 hover:text-white"
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4 inline-block mr-2 mb-0.5" />
+          Times e Rodadas
+        </button>
+        <button
+          onClick={() => setActiveTab("classificacao")}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "classificacao" ? "border-emerald-500 text-white" : "border-transparent text-zinc-400 hover:text-white"
+          }`}
+        >
+          <BarChart className="w-4 h-4 inline-block mr-2 mb-0.5" />
+          Classificação
+        </button>
+      </div>
+
+      {/* ABA: GERENCIAR */}
+      {activeTab === "gerenciar" && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle>Visão Geral</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-zinc-400">Total de Inscritos</span>
+                <span className="font-bold text-lg text-white">{championship.players.length}</span>
               </div>
-            </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-zinc-400">Rodadas Realizadas</span>
+                <span className="font-bold text-lg text-white">{championship.rounds.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-zinc-400">Regras</span>
+                <span className="text-sm text-white">{championship.playersPerTeam} por time</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ABA: JOGADORES */}
+      {activeTab === "jogadores" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Elenco Inscrito</h3>
+            <Link href={`/dashboard/championships/${id}/players/new`}>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Users className="w-4 h-4 mr-2" />
+                Adicionar Jogador
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {championship.players.length === 0 && <p className="text-zinc-500">Nenhum jogador inscrito.</p>}
+            {championship.players.map((p: any) => (
+              <div key={p.id} className="flex justify-between items-center p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
+                    {p.photoUrl ? (
+                      <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Users className="w-5 h-5 text-zinc-500" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="block font-medium text-white">{p.name}</span>
+                    <span className="text-zinc-500 text-xs">{p.category} • {p.number ? `#${p.number}` : "Sem Número"}</span>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-zinc-700 hover:bg-zinc-800" 
+                  onClick={() => {
+                    setEditingPlayer(p);
+                    setPlayerForm({ name: p.name, category: p.category, number: p.number || "" });
+                  }}
+                >
+                  Editar
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ABA: TIMES E RODADAS */}
+      {activeTab === "times" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Gestão de Rodadas</h3>
+            <Link href={`/dashboard/championships/${id}/draft`}>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Play className="w-4 h-4 mr-2" />
+                Sortear Nova Rodada
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {championship.rounds.length === 0 && <p className="text-zinc-500">Nenhuma rodada iniciada.</p>}
+            {championship.rounds.map((r: any) => (
+              <Card key={r.id} className="bg-zinc-900 border-zinc-800">
+                <CardContent className="p-4 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold text-emerald-400 text-lg">Rodada {r.number}</h4>
+                    <p className="text-sm text-zinc-500">{r.matches?.length || 0} Partidas • {r.closed ? "Finalizada" : "Em Andamento"}</p>
+                  </div>
+                  <Link href={`/dashboard/rounds/${r.id}`}>
+                    <Button variant="secondary" className="bg-zinc-800 text-white hover:bg-zinc-700">
+                      Entrar na Rodada
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ABA: CLASSIFICAÇÃO */}
+      {activeTab === "classificacao" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Tabela de Classificação</h3>
             <Button onClick={handleDownloadPDF} variant="outline" className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10">
               <FileText className="w-4 h-4 mr-2" />
               Exportar PDF
             </Button>
           </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <Link href={`/dashboard/championships/${id}/players/new`}>
-            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-              <Users className="w-4 h-4 mr-2" />
-              Add Jogador
-            </Button>
-          </Link>
-          <Link href={`/dashboard/championships/${id}/draft`}>
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              <Play className="w-4 h-4 mr-2" />
-              Sortear Times
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-lg">Jogadores</CardTitle>
-          </CardHeader>
-          <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                {championship.players.map((p: any) => (
-                  <div key={p.id} className="flex justify-between items-center p-3 rounded-lg bg-zinc-950 border border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
-                        {p.photoUrl ? (
-                          <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Users className="w-4 h-4 text-zinc-500" />
-                        )}
-                      </div>
-                      <div>
-                        <span className="block font-medium text-white text-sm">{p.name}</span>
-                        <span className="text-zinc-500 text-xs">{p.category}</span>
-                      </div>
-                    </div>
-                    <span className="text-zinc-400 font-mono text-sm bg-zinc-900 px-2 py-1 rounded">
-                      {p.number ? `#${p.number}` : "S/N"}
-                    </span>
-                  </div>
+          
+          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs uppercase bg-zinc-900/50 text-zinc-400 border-b border-zinc-800">
+                <tr>
+                  <th className="px-4 py-3">Pos</th>
+                  <th className="px-4 py-3">Jogador</th>
+                  <th className="px-4 py-3 text-center">PTS</th>
+                  <th className="px-4 py-3 text-center">J</th>
+                  <th className="px-4 py-3 text-center">V</th>
+                  <th className="px-4 py-3 text-center">E</th>
+                  <th className="px-4 py-3 text-center">D</th>
+                  <th className="px-4 py-3 text-center">Gols</th>
+                  <th className="px-4 py-3 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-8 text-center text-zinc-500">
+                      Nenhuma pontuação computada ainda.
+                    </td>
+                  </tr>
+                )}
+                {leaderboard.map((p, idx) => (
+                  <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-zinc-400">{idx + 1}º</td>
+                    <td className="px-4 py-3 font-medium text-white flex items-center gap-2">
+                      {p.photoUrl ? (
+                        <img src={p.photoUrl} alt={p.name} className="w-6 h-6 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center">
+                          <Users className="w-3 h-3 text-zinc-500" />
+                        </div>
+                      )}
+                      {p.name}
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold text-emerald-400">{p.points}</td>
+                    <td className="px-4 py-3 text-center text-zinc-400">{p.matchesPlayed}</td>
+                    <td className="px-4 py-3 text-center text-zinc-400">{p.wins}</td>
+                    <td className="px-4 py-3 text-center text-zinc-400">{p.draws}</td>
+                    <td className="px-4 py-3 text-center text-zinc-400">{p.losses}</td>
+                    <td className="px-4 py-3 text-center text-zinc-400">{p.goals}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 text-xs border-zinc-700 bg-zinc-900" 
+                        onClick={() => {
+                          setEditingPointsPlayer(p);
+                          setPointsForm(p.points.toString());
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-          </CardContent>
-        </Card>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-lg">Rodadas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {championship.rounds.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhuma rodada iniciada.</p>
-            ) : (
+      {/* POPUP EDITAR JOGADOR */}
+      {editingPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl p-6 relative">
+            <button onClick={() => setEditingPlayer(null)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-white mb-4">Editar Jogador</h3>
+            <div className="space-y-4">
               <div className="space-y-2">
-                {championship.rounds.map((r: any) => (
-                  <div key={r.id} className="flex justify-between p-3 rounded bg-zinc-950 border border-zinc-800">
-                    <span className="font-medium text-emerald-400">Rodada {r.number}</span>
-                    <Link href={`/dashboard/rounds/${r.id}`} className="text-sm text-zinc-400 hover:text-white">
-                      Ver partidas &rarr;
-                    </Link>
-                  </div>
-                ))}
+                <Label>Nome</Label>
+                <Input value={playerForm.name} onChange={e => setPlayerForm({...playerForm, name: e.target.value})} className="bg-zinc-950 border-zinc-800" />
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              <div className="space-y-2">
+                <Label>Camisa</Label>
+                <Input type="number" value={playerForm.number} onChange={e => setPlayerForm({...playerForm, number: e.target.value})} className="bg-zinc-950 border-zinc-800" />
+              </div>
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <select 
+                  className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 focus-visible:outline-none"
+                  value={playerForm.category}
+                  onChange={e => setPlayerForm({...playerForm, category: e.target.value})}
+                >
+                  <option value="CAT_A">Categoria A</option>
+                  <option value="CAT_B">Categoria B</option>
+                  <option value="CAT_C">Categoria C</option>
+                  <option value="GOALKEEPER">Goleiro</option>
+                </select>
+              </div>
+              <Button onClick={handleSavePlayerEdit} className="w-full bg-emerald-600 hover:bg-emerald-700">Salvar Alterações</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP EDITAR PONTOS */}
+      {editingPointsPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm shadow-2xl p-6 relative">
+            <button onClick={() => setEditingPointsPlayer(null)} className="absolute top-4 right-4 text-zinc-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-white mb-4">Ajustar Pontuação Base</h3>
+            <p className="text-sm text-zinc-400 mb-4">Altere a pontuação base de <strong className="text-white">{editingPointsPlayer.name}</strong>. Isso será somado às estatísticas automáticas dele.</p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Pontuação Manual (+/-)</Label>
+                <Input type="number" value={pointsForm} onChange={e => setPointsForm(e.target.value)} className="bg-zinc-950 border-zinc-800 text-xl font-bold text-center" />
+              </div>
+              <Button onClick={handleSavePointsEdit} className="w-full bg-emerald-600 hover:bg-emerald-700">Confirmar Pontuação</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

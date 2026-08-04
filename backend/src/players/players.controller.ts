@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Put } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -29,5 +29,25 @@ export class PlayersController {
     @Param('id') id: string
   ) {
     return this.playersService.remove(req.user.id, championshipId, id);
+  }
+
+  @Put(':id')
+  update(
+    @Request() req,
+    @Param('championshipId') championshipId: string,
+    @Param('id') id: string,
+    @Body() updateData: any
+  ) {
+    return this.playersService.update(req.user.id, championshipId, id, updateData);
+  }
+
+  @Put(':id/manual-points')
+  updateManualPoints(
+    @Request() req,
+    @Param('championshipId') championshipId: string,
+    @Param('id') id: string,
+    @Body('points') points: number
+  ) {
+    return this.playersService.updateManualPoints(req.user.id, championshipId, id, points);
   }
 }

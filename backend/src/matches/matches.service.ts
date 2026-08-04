@@ -48,4 +48,14 @@ export class MatchesService {
       }
     });
   }
+
+  async borrowPlayer(teamId: string, playerId: string) {
+    return this.prisma.teamPlayer.create({
+      data: {
+        teamId,
+        playerId,
+        isBorrowed: true
+      }
+    });
+  }
 }

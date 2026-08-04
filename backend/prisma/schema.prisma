@@ -73,6 +73,7 @@ model Player {
   category       String       // CAT_A, CAT_B, CAT_C, GOALKEEPER
   birthDate      DateTime
   active         Boolean      @default(true)
+  manualPoints   Int          @default(0) // Added for manual leaderboard edits
   
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -117,9 +118,10 @@ model Team {
 }
 
 model TeamPlayer {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   teamId    String
   playerId  String
+  isBorrowed Boolean @default(false)
   
   team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)

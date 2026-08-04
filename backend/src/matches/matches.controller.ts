@@ -32,4 +32,12 @@ export class MatchesController {
   ) {
     return this.matchesService.upsertStat(id, updateMatchStatDto);
   }
+
+  @Post('borrow')
+  borrowPlayer(
+    @Body('teamId') teamId: string,
+    @Body('playerId') playerId: string
+  ) {
+    return this.matchesService.borrowPlayer(teamId, playerId);
+  }
 }

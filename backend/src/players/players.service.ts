@@ -47,4 +47,32 @@ export class PlayersService {
 
     return this.prisma.player.delete({ where: { id } });
   }
+
+  async update(userId: string, championshipId: string, id: string, data: any) {
+    const player = await this.prisma.player.findFirst({
+      where: { id, championshipId, championship: { userId } }
+    });
+    if (!player) {
+      throw new NotFoundException('Player not found');
+    }
+
+    return this.prisma.player.update({
+      where: { id },
+      data
+    });
+  }
+
+  async updateManualPoints(userId: string, championshipId: string, id: string, points: number) {
+    const player = await this.prisma.player.findFirst({
+      where: { id, championshipId, championship: { userId } }
+    });
+    if (!player) {
+      throw new NotFoundException('Player not found');
+    }
+
+    return this.prisma.player.update({
+      where: { id },
+      data: { manualPoints: points }
+    });
+  }
 }

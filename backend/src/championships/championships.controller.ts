@@ -23,6 +23,11 @@ export class ChampionshipsController {
     return this.championshipsService.findOne(req.user.id, id);
   }
 
+  @Get(':id/leaderboard')
+  getLeaderboard(@Request() req, @Param('id') id: string) {
+    return this.championshipsService.getLeaderboard(req.user.id, id);
+  }
+
   @Delete(':id')
   remove(@Request() req, @Param('id') id: string) {
     return this.championshipsService.remove(req.user.id, id);
