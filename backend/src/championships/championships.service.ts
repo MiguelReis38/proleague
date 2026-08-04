@@ -19,6 +19,10 @@ export class ChampionshipsService {
     return this.prisma.championship.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        players: true,
+        rounds: { include: { matches: { include: { homeTeam: true, awayTeam: true } } } }
+      }
     });
   }
 
