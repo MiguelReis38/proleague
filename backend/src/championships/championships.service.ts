@@ -128,7 +128,7 @@ export class ChampionshipsService {
       const playedForHome = teamPlayerMap.has(`${match.homeTeamId}-${stat.playerId}`);
       const playedForAway = teamPlayerMap.has(`${match.awayTeamId}-${stat.playerId}`);
       
-      let teamId = null;
+      let teamId: string | null = null;
       if (playedForHome) teamId = match.homeTeamId;
       else if (playedForAway) teamId = match.awayTeamId;
       
