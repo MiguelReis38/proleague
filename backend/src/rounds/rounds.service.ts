@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoundDto } from './dto/create-round.dto';
 
@@ -110,6 +110,30 @@ export class RoundsService {
       teams[teamIndex].players.push(player);
       teamIndex = (teamIndex + 1) % teams.length;
     }
+  }
+
+  async delete(userId: string, roundId: string) {
+    const round = await this.prisma.round.findFirst({
+      where: { id: roundId, championship: { userId } }
+    });
+    if (!round) throw new NotFoundException('Round not found');
+    return this.prisma.round.delete({ where: { id: roundId } });
+  }
+
+  async close(userId: string, roundId: string) {
+    const round = await this.prisma.round.findFirst({
+      where: { id: roundId, championship: { userId } }
+    });
+    if (!round) throw new NotFoundException('Round not found');
+    return this.prisma.round.update({ where: { id: roundId }, data: { closed: true } });
+  }
+
+  async reopen(userId: string, roundId: string) {
+    const round = await this.prisma.round.findFirst({
+      where: { id: roundId, championship: { userId } }
+    });
+    if (!round) throw new NotFoundException('Round not found');
+    return this.prisma.round.update({ where: { id: roundId }, data: { closed: false } });
   }
 
   async findAllByChampionship(userId: string, championshipId: string) {

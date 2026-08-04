@@ -181,4 +181,70 @@ export class ChampionshipsService {
       return b.goals - a.goals;
     });
   }
+
+  async update(userId: string, id: string, data: any) {
+    await this.findOne(userId, id);
+    return this.prisma.championship.update({
+      where: { id },
+      data
+    });
+  }
+
+  async getScorers(userId: string, id: string) {
+    await this.findOne(userId, id);
+    const stats = await this.prisma.matchStat.groupBy({
+      by: ['playerId'],
+      where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+      _sum: { goals: true }
+    });
+
+    const players = await this.prisma.player.findMany({ where: { championshipId: id } });
+    const playerMap = new Map(players.map(p => [p.id, p]));
+
+    return stats
+      .filter(s => (s._sum.goals || 0) > 0)
+      .map(s => ({
+        playerId: s.playerId,
+        name: playerMap.get(s.playerId)?.name,
+        photoUrl: playerMap.get(s.playerId)?.photoUrl,
+        number: playerMap.get(s.playerId)?.number,
+        goals: s._sum.goals || 0
+      }))
+      .sort((a, b) => b.goals - a.goals);
+  }
+
+  async getGoalkeepers(userId: string, id: string) {
+    await this.findOne(userId, id);
+    const stats = await this.prisma.matchStat.groupBy({
+      by: ['playerId'],
+      where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+      _sum: { saves: true }
+    });
+
+    const players = await this.prisma.player.findMany({ where: { championshipId: id } });
+    const playerMap = new Map(players.map(p => [p.id, p]));
+
+    return stats
+      .filter(s => (s._sum.saves || 0) > 0)
+      .map(s => ({
+        playerId: s.playerId,
+        name: playerMap.get(s.playerId)?.name,
+        photoUrl: playerMap.get(s.playerId)?.photoUrl,
+        number: playerMap.get(s.playerId)?.number,
+        saves: s._sum.saves || 0
+      }))
+      .sort((a, b) => b.saves - a.saves);
+  }
+
+  async resetStats(userId: string, id: string) {
+    await this.findOne(userId, id);
+    await this.prisma.matchStat.deleteMany({
+      where: { match: { round: { championshipId: id } } }
+    });
+    await this.prisma.player.updateMany({
+      where: { championshipId: id },
+      data: { manualPoints: 0 }
+    });
+    return { message: 'Stats reset successfully' };
+  }
 }

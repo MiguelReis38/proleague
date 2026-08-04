@@ -3,30 +3,105 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Trophy, Plus, Pencil, Trash2, X, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
 export default function ChampionshipsPage() {
   const [championships, setChampionships] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  useEffect(() => {
-    async function loadChampionships() {
-      try {
-        const res = await fetchWithAuth("/championships");
-        if (res.ok) {
-          const data = await res.json();
-          setChampionships(data);
-        }
-      } catch (err) {
-        console.error("Failed to load championships", err);
-      } finally {
-        setLoading(false);
-      }
+  // Edit Modal
+  const [editingChamp, setEditingChamp] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    logoUrl: "",
+    winPoints: 3,
+    drawPoints: 1,
+    losePoints: 0,
+    goalPoints: 1,
+    yellowCardPoints: 0,
+    redCardPoints: 0,
+    participationPoints: 0,
+    playersPerTeam: 7,
+  });
+
+  const loadChampionships = async () => {
+    try {
+      const res = await fetchWithAuth("/championships");
+      if (res.ok) setChampionships(await res.json());
+    } catch (err) {
+      console.error("Failed to load championships", err);
+    } finally {
+      setLoading(false);
     }
-    loadChampionships();
-  }, []);
+  };
+
+  useEffect(() => { loadChampionships(); }, []);
+
+  const openEdit = (champ: any) => {
+    setEditingChamp(champ);
+    setEditForm({
+      name: champ.name || "",
+      logoUrl: champ.logoUrl || "",
+      winPoints: champ.winPoints ?? 3,
+      drawPoints: champ.drawPoints ?? 1,
+      losePoints: champ.losePoints ?? 0,
+      goalPoints: champ.goalPoints ?? 1,
+      yellowCardPoints: champ.yellowCardPoints ?? 0,
+      redCardPoints: champ.redCardPoints ?? 0,
+      participationPoints: champ.participationPoints ?? 0,
+      playersPerTeam: champ.playersPerTeam ?? 7,
+    });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setUploadingLogo(true);
+    try {
+      const data = new FormData();
+      data.append("file", file);
+      const res = await fetchWithAuth("/upload", { method: "POST", body: data });
+      if (res.ok) {
+        const result = await res.json();
+        setEditForm(f => ({ ...f, logoUrl: result.url }));
+      }
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetchWithAuth(`/championships/${editingChamp.id}`, {
+        method: "PUT",
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        setEditingChamp(null);
+        loadChampionships();
+      } else {
+        alert("Erro ao salvar");
+      }
+    } catch {
+      alert("Erro de conexão");
+    }
+  };
+
+  const handleDelete = async (champ: any) => {
+    if (!confirm(`Tem certeza que deseja excluir "${champ.name}"? Isso apagará TODAS as rodadas, jogadores e estatísticas.`)) return;
+    try {
+      const res = await fetchWithAuth(`/championships/${champ.id}`, { method: "DELETE" });
+      if (res.ok) loadChampionships();
+      else alert("Erro ao excluir");
+    } catch {
+      alert("Erro de conexão");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -59,23 +134,143 @@ export default function ChampionshipsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {championships.map((champ) => (
-            <Card key={champ.id} className="bg-zinc-900 border-zinc-800 hover:border-emerald-500/50 transition-colors cursor-pointer group">
-              <Link href={`/dashboard/championships/${champ.id}`}>
-                <CardHeader>
-                  <CardTitle className="group-hover:text-emerald-400 transition-colors">{champ.name}</CardTitle>
-                  <CardDescription className="text-zinc-500">
-                    Status: <span className={champ.status === 'ACTIVE' ? 'text-emerald-500' : 'text-zinc-400'}>{champ.status}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-zinc-400">
-                    <span>{champ.playersPerTeam} jogadores / time</span>
-                    <span>{new Date(champ.createdAt).toLocaleDateString()}</span>
+            <Card key={champ.id} className="bg-zinc-900 border-zinc-800 hover:border-emerald-500/30 transition-colors group">
+              <CardHeader className="pb-2">
+                <div className="flex items-start gap-3">
+                  {champ.logoUrl ? (
+                    <img src={champ.logoUrl} alt={champ.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-zinc-700" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-700">
+                      <Trophy className="w-5 h-5 text-zinc-500" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base truncate">{champ.name}</CardTitle>
+                    <CardDescription className="text-zinc-500 text-xs mt-0.5">
+                      <span className={champ.status === 'ACTIVE' ? 'text-emerald-500' : 'text-zinc-400'}>{champ.status}</span>
+                      {" · "}{champ.players?.length || 0} jogadores
+                    </CardDescription>
                   </div>
-                </CardContent>
-              </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="text-xs text-zinc-500 mb-3">
+                  {champ.playersPerTeam} jog/time · {champ.rounds?.length || 0} rodadas
+                </div>
+                <div className="flex gap-2">
+                  <Link href={`/dashboard/championships/${champ.id}`} className="flex-1">
+                    <Button variant="secondary" className="w-full bg-zinc-800 text-white hover:bg-zinc-700 h-8 text-xs">
+                      Abrir
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 border-zinc-700 bg-zinc-900 hover:bg-zinc-800"
+                    onClick={() => openEdit(champ)}
+                    title="Editar campeonato"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 border-red-900/50 bg-zinc-900 hover:bg-red-950 text-red-500"
+                    onClick={() => handleDelete(champ)}
+                    title="Excluir campeonato"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* MODAL EDITAR CAMPEONATO */}
+      {editingChamp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl my-8">
+            <div className="flex justify-between items-center p-5 border-b border-zinc-800">
+              <h3 className="text-lg font-bold text-white">Editar Campeonato</h3>
+              <button onClick={() => setEditingChamp(null)} className="text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* Logo */}
+              <div className="flex items-center gap-4">
+                <div className="relative group w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center shrink-0">
+                  {editForm.logoUrl ? (
+                    <img src={editForm.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Trophy className="w-6 h-6 text-zinc-500" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                  />
+                  <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center pointer-events-none">
+                    {uploadingLogo ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Upload className="w-4 h-4 text-white" />}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label>Nome do Campeonato</Label>
+                  <Input
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    className="bg-zinc-950 border-zinc-800"
+                  />
+                </div>
+              </div>
+
+              {/* Config */}
+              <div className="space-y-1">
+                <Label>Jogadores por Time</Label>
+                <Input
+                  type="number"
+                  value={editForm.playersPerTeam}
+                  onChange={e => setEditForm(f => ({ ...f, playersPerTeam: Number(e.target.value) }))}
+                  className="bg-zinc-950 border-zinc-800"
+                />
+              </div>
+
+              <div className="border-t border-zinc-800 pt-4">
+                <h4 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wider">Regras de Pontuação</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Pts por Vitória", key: "winPoints" },
+                    { label: "Pts por Empate", key: "drawPoints" },
+                    { label: "Pts por Derrota", key: "losePoints" },
+                    { label: "Pts por Gol", key: "goalPoints" },
+                    { label: "Pts Participação", key: "participationPoints" },
+                    { label: "Pts Amarelo (neg.)", key: "yellowCardPoints" },
+                    { label: "Pts Vermelho (neg.)", key: "redCardPoints" },
+                  ].map(({ label, key }) => (
+                    <div key={key} className="space-y-1">
+                      <Label className="text-xs">{label}</Label>
+                      <Input
+                        type="number"
+                        value={(editForm as any)[key]}
+                        onChange={e => setEditForm(f => ({ ...f, [key]: Number(e.target.value) }))}
+                        className="bg-zinc-950 border-zinc-800 h-8 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-zinc-800 flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setEditingChamp(null)} className="text-zinc-400">Cancelar</Button>
+              <Button onClick={handleSaveEdit} className="bg-emerald-600 hover:bg-emerald-700">Salvar Alterações</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

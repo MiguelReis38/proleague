@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ChampionshipsService } from './championships.service';
 import { CreateChampionshipDto } from './dto/create-championship.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,9 +23,29 @@ export class ChampionshipsController {
     return this.championshipsService.findOne(req.user.id, id);
   }
 
+  @Put(':id')
+  update(@Request() req, @Param('id') id: string, @Body() body: any) {
+    return this.championshipsService.update(req.user.id, id, body);
+  }
+
   @Get(':id/leaderboard')
   getLeaderboard(@Request() req, @Param('id') id: string) {
     return this.championshipsService.getLeaderboard(req.user.id, id);
+  }
+
+  @Get(':id/scorers')
+  getScorers(@Request() req, @Param('id') id: string) {
+    return this.championshipsService.getScorers(req.user.id, id);
+  }
+
+  @Get(':id/goalkeepers')
+  getGoalkeepers(@Request() req, @Param('id') id: string) {
+    return this.championshipsService.getGoalkeepers(req.user.id, id);
+  }
+
+  @Delete(':id/stats')
+  resetStats(@Request() req, @Param('id') id: string) {
+    return this.championshipsService.resetStats(req.user.id, id);
   }
 
   @Delete(':id')
