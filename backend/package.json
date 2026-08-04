@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "render-build": "rm -rf prisma/migrations && npx prisma generate && npx prisma db push --accept-data-loss && nest build",
+    "render-build": "npx prisma generate && npx prisma migrate deploy && nest build",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
