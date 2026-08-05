@@ -108,6 +108,7 @@ export class ChampionshipsService {
       number: p.number,
       points: p.manualPoints, // Inicia com os pontos manuais
       goals: 0,
+      ownGoals: 0,
       assists: 0,
       wins: 0,
       draws: 0,
@@ -152,6 +153,7 @@ export class ChampionshipsService {
 
       p.matchesPlayed++;
       p.goals += stat.goals;
+      p.ownGoals += stat.ownGoals;
       p.assists += stat.assists;
 
       if (won) p.wins++;

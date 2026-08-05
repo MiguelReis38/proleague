@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt } from "lucide-react";
+import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt, Share2 } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
@@ -305,6 +305,16 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
               ))}
             </div>
             <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  const url = `${window.location.origin}/public/championship/${id}`;
+                  navigator.clipboard.writeText(url);
+                  alert("Link copiado! Qualquer pessoa com ele pode ver a classificação.");
+                }}
+                variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 text-xs"
+              >
+                <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar
+              </Button>
               <Button onClick={handleDownloadPDF} variant="outline" className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 h-8 text-xs">
                 <FileText className="w-3.5 h-3.5 mr-1.5" /> Exportar PDF
               </Button>
@@ -329,6 +339,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                     <th className="px-3 py-3 text-center">E</th>
                     <th className="px-3 py-3 text-center">D</th>
                     <th className="px-3 py-3 text-center">Gols</th>
+                    <th className="px-3 py-3 text-center text-red-400/70">GC</th>
                     <th className="px-3 py-3 text-right">Ação</th>
                   </tr>
                 </thead>
@@ -358,6 +369,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                       <td className="px-3 py-3 text-center text-zinc-400">{p.draws}</td>
                       <td className="px-3 py-3 text-center text-zinc-400">{p.losses}</td>
                       <td className="px-3 py-3 text-center text-zinc-400">{p.goals}</td>
+                      <td className="px-3 py-3 text-center text-red-400/70 text-xs">{(p.ownGoals || 0) > 0 ? p.ownGoals : '—'}</td>
                       <td className="px-3 py-3 text-right">
                         <Button variant="outline" size="sm" className="h-7 text-xs border-zinc-700 bg-zinc-900"
                           onClick={() => { setEditingPointsPlayer(p); setPointsForm(p.points.toString()); }}>

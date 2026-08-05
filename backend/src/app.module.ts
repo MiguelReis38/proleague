@@ -10,6 +10,7 @@ import { MatchesModule } from './matches/matches.module';
 import { UploadModule } from './upload/upload.module';
 import { ReportsModule } from './reports/reports.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PublicModule } from './public/public.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -28,6 +29,7 @@ import { join } from 'path';
     UploadModule,
     ReportsModule,
     PaymentsModule,
+    PublicModule,
   ],
   controllers: [AppController],
   providers: [AppService],
