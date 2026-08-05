@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "render-build": "npx prisma generate && npx prisma migrate deploy && nest build",
+    "render-build": "npx prisma generate && npx prisma migrate resolve --applied 20260804_init || true && npx prisma migrate deploy && nest build",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
