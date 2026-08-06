@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ProLeague</string>
+    <string name="title_activity_main">ProLeague</string>
+    <string name="package_name">com.miguelreis.proleague</string>
+    <string name="custom_url_scheme">com.miguelreis.proleague</string>
+</resources>
