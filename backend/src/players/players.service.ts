@@ -22,9 +22,9 @@ export class PlayersService {
       const playerCount = await this.prisma.player.count({
         where: { championshipId }
       });
-      if (playerCount >= 30) {
+      if (playerCount >= 15) {
         throw new ForbiddenException(
-          'O plano Gratuito possui limite de 30 jogadores por campeonato. Faça upgrade para o Pro para adicionar mais!'
+          'O plano Gratuito possui limite de 15 jogadores por campeonato. Faça upgrade para o Pro para adicionar mais!'
         );
       }
     }

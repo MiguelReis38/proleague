@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Trophy, Users, CalendarDays, Settings, LogOut, LayoutDashboard, Crown, AlertTriangle, Clock } from "lucide-react";
+import { Trophy, Users, CalendarDays, Settings, LogOut, LayoutDashboard, Crown, AlertTriangle, Clock, DollarSign } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 
 type Subscription = {
@@ -44,7 +44,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Campeonatos", href: "/dashboard/championships", icon: Trophy },
     { name: "Jogadores", href: "/dashboard/players", icon: Users },
-    { name: "Partidas", href: "/dashboard/matches", icon: CalendarDays },
+    { name: "Rodadas & Partidas", href: "/dashboard/matches", icon: CalendarDays },
+    { name: "Financeiro", href: "/dashboard/finance", icon: DollarSign },
     { name: "Assinatura PRO", href: "/dashboard/billing", icon: Crown },
     { name: "Configurações", href: "/dashboard/settings", icon: Settings },
   ];

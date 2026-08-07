@@ -16,7 +16,7 @@ const PLANS = [
     period: "para sempre",
     icon: Shield,
     color: "zinc",
-    features: ["1 campeonato ativo", "Até 30 jogadores", "Link público da classificação", "Sorteio automático"],
+    features: ["1 campeonato ativo", "Até 15 jogadores", "Link público da classificação", "Sorteio automático"],
     missing: ["Exportar PDF", "QR Code", "Controle financeiro"],
   },
   {
