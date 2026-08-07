@@ -1,21 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Search, Trophy, Edit, X, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Users, Search, Trophy, Edit, X, Trash2, Upload, Calendar, Flame } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FifaCardModal } from "@/components/FifaCardModal";
 
 export default function PlayersGlobalPage() {
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // FIFA Card Modal State
+  const [selectedFifaPlayer, setSelectedFifaPlayer] = useState<any>(null);
+
   // Edit State
   const [editingPlayer, setEditingPlayer] = useState<any>(null);
-  const [playerForm, setPlayerForm] = useState({ name: "", category: "", number: "", photoUrl: "" });
+  const [playerForm, setPlayerForm] = useState({
+    name: "",
+    category: "CAT_A",
+    number: "",
+    photoUrl: "",
+    birthDate: "",
+  });
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const loadData = async () => {
@@ -45,13 +56,73 @@ export default function PlayersGlobalPage() {
   }, []);
 
   const handleOpenEdit = (p: any) => {
+    let formattedDate = "";
+    if (p.birthDate) {
+      const d = new Date(p.birthDate);
+      if (!isNaN(d.getTime())) {
+        formattedDate = d.toISOString().split("T")[0];
+      }
+    }
+
     setEditingPlayer(p);
     setPlayerForm({
       name: p.name || "",
       category: p.category || "CAT_A",
       number: p.number || "",
       photoUrl: p.photoUrl || "",
+      birthDate: formattedDate,
     });
+  };
+
+  // Upload de arquivo de imagem (Computador ou Galeria do Celular)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "https://proleague-backend-5i1x.onrender.com"}/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          setPlayerForm((prev) => ({ ...prev, photoUrl: data.url }));
+        }
+      } else {
+        // Fallback base64 instantâneo caso upload remoto falhe
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setPlayerForm((prev) => ({ ...prev, photoUrl: event.target!.result as string }));
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      // Fallback base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPlayerForm((prev) => ({ ...prev, photoUrl: event.target!.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSavePlayerEdit = async () => {
@@ -67,6 +138,7 @@ export default function PlayersGlobalPage() {
             category: playerForm.category,
             number: playerForm.number ? Number(playerForm.number) : null,
             photoUrl: playerForm.photoUrl || null,
+            birthDate: playerForm.birthDate || null,
           }),
         }
       );
@@ -100,6 +172,19 @@ export default function PlayersGlobalPage() {
     }
   };
 
+  const calculateAge = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const birth = new Date(dateStr);
+    if (isNaN(birth.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const filteredPlayers = players.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,7 +200,9 @@ export default function PlayersGlobalPage() {
             <Users className="text-emerald-500 w-6 h-6" />
             Todos os Jogadores
           </h2>
-          <p className="text-zinc-400">Gerencie todos os atletas das suas competições.</p>
+          <p className="text-zinc-400">
+            Gerencie atletas e clique no jogador para ver seu Card EA FC / FIFA!
+          </p>
         </div>
       </div>
 
@@ -143,67 +230,106 @@ export default function PlayersGlobalPage() {
                   <tr>
                     <th className="px-4 py-3 rounded-tl-lg">Nome do Jogador</th>
                     <th className="px-4 py-3">Categoria/Nível</th>
+                    <th className="px-4 py-3">Idade</th>
                     <th className="px-4 py-3">Campeonato</th>
-                    <th className="px-4 py-3">Nº de Camisa</th>
+                    <th className="px-4 py-3">Nº Camisa</th>
                     <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPlayers.map((player) => (
-                    <tr
-                      key={player.id}
-                      className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-medium text-white flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
-                          {player.photoUrl ? (
-                            <img
-                              src={player.photoUrl}
-                              alt={player.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Users className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </div>
-                        {player.name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="bg-zinc-800 px-2 py-1 rounded text-xs text-zinc-300">
-                          {player.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Trophy className="w-3.5 h-3.5 text-emerald-500" />
-                          {player.championshipName}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-400 font-mono">
-                        {player.number ? `#${player.number}` : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            onClick={() => handleOpenEdit(player)}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                  {filteredPlayers.map((player) => {
+                    const age = calculateAge(player.birthDate);
+                    return (
+                      <tr
+                        key={player.id}
+                        className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-medium text-white">
+                          <div
+                            onClick={() =>
+                              setSelectedFifaPlayer({
+                                ...player,
+                                points: player.manualPoints || 0,
+                                goals: 0,
+                                wins: 0,
+                              })
+                            }
+                            className="flex items-center gap-3 cursor-pointer group"
                           >
-                            <Edit className="w-3.5 h-3.5 mr-1 text-emerald-400" /> Editar
-                          </Button>
-                          <Button
-                            onClick={() => handleDeletePlayer(player)}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0 border-zinc-800 text-zinc-500 hover:text-red-400 hover:border-red-900"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                              {player.photoUrl ? (
+                                <img
+                                  src={player.photoUrl}
+                                  alt={player.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Users className="w-4 h-4 text-zinc-500" />
+                              )}
+                            </div>
+                            <span className="group-hover:text-emerald-400 transition-colors">
+                              {player.name}
+                            </span>
+                            <span className="text-[10px] bg-amber-500/20 border border-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-bold opacity-80 group-hover:opacity-100 transition-opacity">
+                              🎴 Card
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="bg-zinc-800 px-2 py-1 rounded text-xs text-zinc-300 font-semibold">
+                            {player.category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-zinc-400 text-xs">
+                          {age ? `${age} anos` : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Trophy className="w-3.5 h-3.5 text-emerald-500" />
+                            {player.championshipName}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-zinc-400 font-mono text-xs">
+                          {player.number ? `#${player.number}` : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              onClick={() =>
+                                setSelectedFifaPlayer({
+                                  ...player,
+                                  points: player.manualPoints || 0,
+                                  goals: 0,
+                                  wins: 0,
+                                })
+                              }
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs border-amber-500/40 text-amber-300 hover:bg-amber-950/40 font-bold"
+                            >
+                              <Flame className="w-3.5 h-3.5 mr-1 text-amber-400 fill-amber-400" /> Card
+                            </Button>
+                            <Button
+                              onClick={() => handleOpenEdit(player)}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                            >
+                              <Edit className="w-3.5 h-3.5 mr-1 text-emerald-400" /> Editar
+                            </Button>
+                            <Button
+                              onClick={() => handleDeletePlayer(player)}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 border-zinc-800 text-zinc-500 hover:text-red-400 hover:border-red-900"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -211,7 +337,7 @@ export default function PlayersGlobalPage() {
         </CardContent>
       </Card>
 
-      {/* MODAL EDITAR JOGADOR */}
+      {/* MODAL EDITAR JOGADOR COM FILE UPLOAD & DATA NASCIMENTO */}
       {editingPlayer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl p-6 relative">
@@ -223,9 +349,9 @@ export default function PlayersGlobalPage() {
             </button>
             <h3 className="text-lg font-bold text-white mb-4">Editar Jogador</h3>
 
-            {/* Photo Preview & Edit */}
+            {/* Photo Preview & File Upload */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-emerald-500/50 overflow-hidden shrink-0 flex items-center justify-center">
                 {playerForm.photoUrl ? (
                   <img
                     src={playerForm.photoUrl}
@@ -237,13 +363,20 @@ export default function PlayersGlobalPage() {
                 )}
               </div>
               <div className="flex-1 space-y-1">
-                <Label className="text-xs text-zinc-300">URL da Foto</Label>
-                <Input
-                  placeholder="https://..."
-                  value={playerForm.photoUrl}
-                  onChange={(e) => setPlayerForm({ ...playerForm, photoUrl: e.target.value })}
-                  className="bg-zinc-950 border-zinc-800 text-xs text-white"
-                />
+                <Label className="text-xs text-zinc-300">Foto do Jogador (Upload)</Label>
+                <div className="flex gap-2 items-center">
+                  <label className="cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-white text-xs px-3 py-2 rounded-lg border border-zinc-700 flex items-center gap-1.5 transition-colors font-medium">
+                    <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                    {uploading ? "Enviando..." : "Escolher Imagem"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -257,15 +390,26 @@ export default function PlayersGlobalPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Número da Camisa</Label>
-                <Input
-                  type="number"
-                  placeholder="Ex: 10"
-                  value={playerForm.number}
-                  onChange={(e) => setPlayerForm({ ...playerForm, number: e.target.value })}
-                  className="bg-zinc-950 border-zinc-800 text-white"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-zinc-300">Nº da Camisa</Label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 10"
+                    value={playerForm.number}
+                    onChange={(e) => setPlayerForm({ ...playerForm, number: e.target.value })}
+                    className="bg-zinc-950 border-zinc-800 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-300">Data de Nascimento</Label>
+                  <Input
+                    type="date"
+                    value={playerForm.birthDate}
+                    onChange={(e) => setPlayerForm({ ...playerForm, birthDate: e.target.value })}
+                    className="bg-zinc-950 border-zinc-800 text-white text-xs"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -284,7 +428,7 @@ export default function PlayersGlobalPage() {
 
               <Button
                 onClick={handleSavePlayerEdit}
-                disabled={saving}
+                disabled={saving || uploading}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 font-bold"
               >
                 {saving ? "Salvando..." : "Salvar Alterações"}
@@ -292,6 +436,15 @@ export default function PlayersGlobalPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL CARD EA FC / FIFA */}
+      {selectedFifaPlayer && (
+        <FifaCardModal
+          player={selectedFifaPlayer}
+          championshipName={selectedFifaPlayer?.championshipName || "ProLeague"}
+          onClose={() => setSelectedFifaPlayer(null)}
+        />
       )}
     </div>
   );

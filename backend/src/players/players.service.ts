@@ -71,7 +71,7 @@ export class PlayersService {
       throw new NotFoundException('Player not found');
     }
 
-    const { name, category, number, photoUrl } = data;
+    const { name, category, number, photoUrl, birthDate } = data;
 
     return this.prisma.player.update({
       where: { id },
@@ -80,6 +80,7 @@ export class PlayersService {
         ...(category !== undefined && { category }),
         ...(number !== undefined && { number: number ? Number(number) : null }),
         ...(photoUrl !== undefined && { photoUrl }),
+        ...(birthDate !== undefined && { birthDate: birthDate ? new Date(birthDate) : undefined }),
       }
     });
   }
