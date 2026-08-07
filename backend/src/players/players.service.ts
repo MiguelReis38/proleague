@@ -14,6 +14,21 @@ export class PlayersService {
       throw new ForbiddenException('Championship not found or access denied');
     }
 
+    // Verificar se o usuário está no plano FREE e atingiu o limite de 30 jogadores
+    const sub = await this.prisma.subscription.findUnique({ where: { userId } });
+    const userPlan = sub?.planType || 'FREE';
+
+    if (userPlan === 'FREE') {
+      const playerCount = await this.prisma.player.count({
+        where: { championshipId }
+      });
+      if (playerCount >= 30) {
+        throw new ForbiddenException(
+          'O plano Gratuito possui limite de 30 jogadores por campeonato. Faça upgrade para o Pro para adicionar mais!'
+        );
+      }
+    }
+
     return this.prisma.player.create({
       data: {
         ...data,
@@ -56,9 +71,16 @@ export class PlayersService {
       throw new NotFoundException('Player not found');
     }
 
+    const { name, category, number, photoUrl } = data;
+
     return this.prisma.player.update({
       where: { id },
-      data
+      data: {
+        ...(name !== undefined && { name }),
+        ...(category !== undefined && { category }),
+        ...(number !== undefined && { number: number ? Number(number) : null }),
+        ...(photoUrl !== undefined && { photoUrl }),
+      }
     });
   }
 

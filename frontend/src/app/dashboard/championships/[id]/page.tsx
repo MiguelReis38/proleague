@@ -21,7 +21,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
 
   // Edit Player State
   const [editingPlayer, setEditingPlayer] = useState<any>(null);
-  const [playerForm, setPlayerForm] = useState({ name: "", category: "", number: "" });
+  const [playerForm, setPlayerForm] = useState({ name: "", category: "", number: "", photoUrl: "" });
 
   // Edit Points State
   const [editingPointsPlayer, setEditingPointsPlayer] = useState<any>(null);
@@ -78,7 +78,12 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
     try {
       const res = await fetchWithAuth(`/championships/${id}/players/${editingPlayer.id}`, {
         method: "PUT",
-        body: JSON.stringify({ name: playerForm.name, category: playerForm.category, number: playerForm.number ? Number(playerForm.number) : null })
+        body: JSON.stringify({
+          name: playerForm.name,
+          category: playerForm.category,
+          number: playerForm.number ? Number(playerForm.number) : null,
+          photoUrl: playerForm.photoUrl || null
+        })
       });
       if (res.ok) { setEditingPlayer(null); loadData(); }
       else alert("Erro ao editar jogador");
@@ -209,7 +214,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="border-zinc-700 hover:bg-zinc-800"
-                  onClick={() => { setEditingPlayer(p); setPlayerForm({ name: p.name, category: p.category, number: p.number || "" }); }}>
+                  onClick={() => { setEditingPlayer(p); setPlayerForm({ name: p.name, category: p.category, number: p.number || "", photoUrl: p.photoUrl || "" }); }}>
                   Editar
                 </Button>
               </div>
@@ -509,9 +514,30 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl p-6 relative">
             <button onClick={() => setEditingPlayer(null)} className="absolute top-4 right-4 text-zinc-400 hover:text-white"><X className="w-5 h-5" /></button>
             <h3 className="text-lg font-bold text-white mb-4">Editar Jogador</h3>
+            
+            {/* Photo Preview & Edit */}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                {playerForm.photoUrl ? (
+                  <img src={playerForm.photoUrl} alt="Foto" className="w-full h-full object-cover" />
+                ) : (
+                  <Users className="w-8 h-8 text-zinc-500" />
+                )}
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">URL da Foto</Label>
+                <Input
+                  placeholder="https://..."
+                  value={playerForm.photoUrl}
+                  onChange={e => setPlayerForm({ ...playerForm, photoUrl: e.target.value })}
+                  className="bg-zinc-950 border-zinc-800 text-xs"
+                />
+              </div>
+            </div>
+
             <div className="space-y-4">
-              <div className="space-y-2"><Label>Nome</Label><Input value={playerForm.name} onChange={e => setPlayerForm({ ...playerForm, name: e.target.value })} className="bg-zinc-950 border-zinc-800" /></div>
-              <div className="space-y-2"><Label>Camisa</Label><Input type="number" value={playerForm.number} onChange={e => setPlayerForm({ ...playerForm, number: e.target.value })} className="bg-zinc-950 border-zinc-800" /></div>
+              <div className="space-y-2"><Label>Nome do Jogador</Label><Input value={playerForm.name} onChange={e => setPlayerForm({ ...playerForm, name: e.target.value })} className="bg-zinc-950 border-zinc-800" /></div>
+              <div className="space-y-2"><Label>Número da Camisa</Label><Input type="number" placeholder="Ex: 10" value={playerForm.number} onChange={e => setPlayerForm({ ...playerForm, number: e.target.value })} className="bg-zinc-950 border-zinc-800" /></div>
               <div className="space-y-2">
                 <Label>Categoria</Label>
                 <select className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-200" value={playerForm.category} onChange={e => setPlayerForm({ ...playerForm, category: e.target.value })}>
@@ -521,7 +547,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                   <option value="GOALKEEPER">Goleiro</option>
                 </select>
               </div>
-              <Button onClick={handleSavePlayerEdit} className="w-full bg-emerald-600 hover:bg-emerald-700">Salvar Alterações</Button>
+              <Button onClick={handleSavePlayerEdit} className="w-full bg-emerald-600 hover:bg-emerald-700 font-bold">Salvar Alterações</Button>
             </div>
           </div>
         </div>
