@@ -25,10 +25,17 @@ export class ReportsController {
   async getLeaderboardReport(
     @Param('id') id: string,
     @Body('leaderboard') leaderboard: any[],
+    @Body('scorers') scorers: any[],
+    @Body('goalkeepers') goalkeepers: any[],
     @Res() res: Response
   ) {
     try {
-      const pdfBuffer = await this.reportsService.generateLeaderboardPDF(id, leaderboard || []);
+      const pdfBuffer = await this.reportsService.generateLeaderboardPDF(
+        id,
+        leaderboard || [],
+        scorers || [],
+        goalkeepers || []
+      );
       res.set({
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename=classificacao.pdf',

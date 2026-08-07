@@ -60,7 +60,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
     try {
       const res = await fetchWithAuth(`/reports/championship/${id}/leaderboard`, {
         method: "POST",
-        body: JSON.stringify({ leaderboard })
+        body: JSON.stringify({ leaderboard, scorers, goalkeepers })
       });
       if (res.ok) {
         const blob = await res.blob();
