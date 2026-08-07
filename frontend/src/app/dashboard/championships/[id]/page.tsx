@@ -144,16 +144,17 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
       {/* TABS */}
       <div className="flex overflow-x-auto border-b border-zinc-800 scrollbar-hide">
         {[
-          { key: "gerenciar", label: "Gerenciar", icon: Settings },
+          { key: "gerenciar", label: "Visão Geral", icon: Settings },
           { key: "jogadores", label: `Jogadores (${championship.players?.length || 0})`, icon: Users },
-          { key: "times", label: "Times e Rodadas", icon: LayoutGrid },
+          { key: "times", label: `Rodadas (${championship.rounds?.length || 0})`, icon: LayoutGrid },
           { key: "classificacao", label: "Classificação", icon: BarChart },
+          { key: "financeiro", label: "Financeiro", icon: DollarSign },
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key as any)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === key ? "border-emerald-500 text-white" : "border-transparent text-zinc-400 hover:text-white"
+              activeTab === key ? "border-emerald-500 text-white font-bold" : "border-transparent text-zinc-400 hover:text-white"
             }`}
           >
             <Icon className="w-4 h-4 inline-block mr-2 mb-0.5" />
@@ -482,6 +483,23 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ABA: FINANCEIRO */}
+      {activeTab === "financeiro" && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-xl">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-1">💰 Controle Financeiro do Campeonato</h3>
+              <p className="text-sm text-zinc-400">Gerencie mensalidades dos jogadores, pagamentos pendentes e despesas gerais.</p>
+            </div>
+            <Link href={`/dashboard/championships/${id}/finance`}>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                <DollarSign className="w-4 h-4 mr-2" /> Abrir Painel Financeiro Completo
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 

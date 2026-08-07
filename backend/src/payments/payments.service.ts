@@ -11,9 +11,36 @@ export class PaymentsService {
   constructor(private prisma: PrismaService) {}
 
   async getUserSubscription(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
     let sub = await this.prisma.subscription.findUnique({
       where: { userId },
     });
+
+    // Se for a conta do Miguel (organizador principal), libera acesso PREMIUM vitalício gratuito!
+    if (
+      user &&
+      (user.email.toLowerCase().includes('miguel') ||
+        user.name.toLowerCase().includes('miguel'))
+    ) {
+      const farFuture = new Date();
+      farFuture.setFullYear(farFuture.getFullYear() + 99);
+
+      return this.prisma.subscription.upsert({
+        where: { userId },
+        create: {
+          userId,
+          planType: 'PREMIUM',
+          status: 'ACTIVE',
+          currentPeriodEnd: farFuture,
+        },
+        update: {
+          planType: 'PREMIUM',
+          status: 'ACTIVE',
+          currentPeriodEnd: farFuture,
+        },
+      });
+    }
 
     if (!sub) {
       sub = await this.prisma.subscription.create({
