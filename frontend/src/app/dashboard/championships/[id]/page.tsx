@@ -18,7 +18,7 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
   const [scorers, setScorers] = useState<any[]>([]);
   const [goalkeepers, setGoalkeepers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"gerenciar" | "times" | "jogadores" | "classificacao">("gerenciar");
+  const [activeTab, setActiveTab] = useState<"gerenciar" | "times" | "jogadores" | "classificacao" | "financeiro">("gerenciar");
   const [classTab, setClassTab] = useState<"pontos" | "artilheiros" | "luva">("pontos");
 
   // Edit Player State
@@ -577,6 +577,12 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                 <Label>Pontuação Manual (+/-)</Label>
                 <Input type="number" value={pointsForm} onChange={e => setPointsForm(e.target.value)} className="bg-zinc-950 border-zinc-800 text-xl font-bold text-center" />
               </div>
+              <Button onClick={handleSavePointsEdit} className="w-full bg-emerald-600 hover:bg-emerald-700">Confirmar Pontuação</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL CARD EA FC / FIFA */}
       {selectedFifaPlayer && (
         <FifaCardModal
