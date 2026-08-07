@@ -11,6 +11,7 @@ import { UploadModule } from './upload/upload.module';
 import { ReportsModule } from './reports/reports.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PublicModule } from './public/public.module';
+import { FinanceModule } from './finance/finance.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -30,6 +31,7 @@ import { join } from 'path';
     ReportsModule,
     PaymentsModule,
     PublicModule,
+    FinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

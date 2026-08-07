@@ -19,13 +19,16 @@ model User {
 }
 
 model Subscription {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  planType  String   @default("FREE") // FREE, PRO, PREMIUM
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  planType          String    @default("FREE") // FREE, PRO, PREMIUM
+  status            String    @default("ACTIVE") // ACTIVE, CANCELLED, EXPIRED
+  mercadoPagoId     String?   // ID da assinatura no Mercado Pago
+  currentPeriodEnd  DateTime? // quando o plano expira
+  active            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Championship {
@@ -63,6 +66,8 @@ model Championship {
   
   players     Player[]
   rounds      Round[]
+  fees        PlayerFee[]
+  expenses    Expense[]
 }
 
 model Player {
@@ -83,6 +88,7 @@ model Player {
 
   matchStats     MatchStat[]
   teamPlayers    TeamPlayer[]
+  fees           PlayerFee[]
 }
 
 model Round {
@@ -165,4 +171,37 @@ model MatchStat {
   player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   
   @@unique([matchId, playerId])
+}
+
+// Controle de mensalidade de cada jogador no campeonato
+model PlayerFee {
+  id             String    @id @default(uuid())
+  amount         Float     // valor da mensalidade
+  dueDate        DateTime  // data de vencimento
+  paidAt         DateTime? // null = ainda não pagou
+  note           String?   // observação do organizador
+
+  championshipId String
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+
+  playerId       String
+  player         Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Despesas do campeonato (quadra, bolas, troféus, etc.)
+model Expense {
+  id             String   @id @default(uuid())
+  description    String   // ex: "Aluguel da quadra", "Compra de bolas"
+  amount         Float    // valor
+  date           DateTime // data da despesa
+  category       String   @default("OTHER") // FIELD, EQUIPMENT, TROPHY, OTHER
+
+  championshipId String
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

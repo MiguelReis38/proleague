@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt, Share2 } from "lucide-react";
+import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt, Share2, QrCode, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
@@ -220,14 +220,21 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
       {/* ABA: TIMES E RODADAS */}
       {activeTab === "times" && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-white">Gestão de Rodadas</h3>
-            <Link href={`/dashboard/championships/${id}/draft`}>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                <Play className="w-4 h-4 mr-2" /> Sortear Nova Rodada
-              </Button>
-            </Link>
-          </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold">Rodadas</h2>
+              <Link href={`/dashboard/championships/${id}/finance`}>
+                <Button variant="outline" size="sm" className="border-emerald-700 text-emerald-400 hover:bg-emerald-950 h-8 text-xs">
+                  <DollarSign className="w-3.5 h-3.5 mr-1" /> Financeiro
+                </Button>
+              </Link>
+            </div>
+            <div className="flex justify-end">
+              <Link href={`/dashboard/championships/${id}/draft`}>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Play className="w-4 h-4 mr-2" /> Sortear Nova Rodada
+                </Button>
+              </Link>
+            </div>
           <div className="grid grid-cols-1 gap-4">
             {championship.rounds.length === 0 && <p className="text-zinc-500">Nenhuma rodada iniciada.</p>}
             {championship.rounds.map((r: any) => (
@@ -304,7 +311,20 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                onClick={async () => {
+                  const url = `${window.location.origin}/public/championship/${id}`;
+                  // @ts-ignore
+                  const QRCode = (await import('qrcode')).default;
+                  const dataUrl = await QRCode.toDataURL(url, { width: 300, color: { dark: '#10b981', light: '#09090b' } });
+                  const win = window.open('');
+                  win?.document.write(`<html><body style='background:#09090b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0'><div style='text-align:center'><img src='${dataUrl}' style='width:300px'/><p style='color:#10b981;font-family:sans-serif;margin-top:16px'>QR Code — ${url}</p></div></body></html>`);
+                }}
+                variant="outline" className="border-purple-700 text-purple-400 hover:bg-purple-950 h-8 text-xs"
+              >
+                <QrCode className="w-3.5 h-3.5 mr-1.5" /> QR Code
+              </Button>
               <Button
                 onClick={() => {
                   const url = `${window.location.origin}/public/championship/${id}`;
