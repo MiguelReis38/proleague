@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trophy, Plus, Pencil, Trash2, X, Upload, Loader2 } from "lucide-react";
+import { Trophy, Plus, Pencil, Trash2, X, Upload, Loader2, CheckCircle2, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
 
@@ -14,11 +14,15 @@ export default function ChampionshipsPage() {
   const [loading, setLoading] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  // Status Filter
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "FINISHED">("ALL");
+
   // Edit Modal
   const [editingChamp, setEditingChamp] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     logoUrl: "",
+    status: "ACTIVE",
     winPoints: 3,
     drawPoints: 1,
     losePoints: 0,
@@ -40,13 +44,16 @@ export default function ChampionshipsPage() {
     }
   };
 
-  useEffect(() => { loadChampionships(); }, []);
+  useEffect(() => {
+    loadChampionships();
+  }, []);
 
   const openEdit = (champ: any) => {
     setEditingChamp(champ);
     setEditForm({
       name: champ.name || "",
       logoUrl: champ.logoUrl || "",
+      status: champ.status || "ACTIVE",
       winPoints: champ.winPoints ?? 3,
       drawPoints: champ.drawPoints ?? 1,
       losePoints: champ.losePoints ?? 0,
@@ -68,7 +75,7 @@ export default function ChampionshipsPage() {
       const res = await fetchWithAuth("/upload", { method: "POST", body: data });
       if (res.ok) {
         const result = await res.json();
-        setEditForm(f => ({ ...f, logoUrl: result.url }));
+        setEditForm((f) => ({ ...f, logoUrl: result.url }));
       }
     } finally {
       setUploadingLogo(false);
@@ -85,15 +92,37 @@ export default function ChampionshipsPage() {
         setEditingChamp(null);
         loadChampionships();
       } else {
-        alert("Erro ao salvar");
+        alert("Erro ao salvar alterações.");
       }
     } catch {
       alert("Erro de conexão");
     }
   };
 
+  const toggleChampStatus = async (champ: any) => {
+    const nextStatus = champ.status === "ACTIVE" ? "FINISHED" : "ACTIVE";
+    const label = nextStatus === "FINISHED" ? "Concluir/Finalizar" : "Reabrir";
+    if (!confirm(`Deseja alterar o status do campeonato "${champ.name}" para ${label}?`)) return;
+
+    try {
+      const res = await fetchWithAuth(`/championships/${champ.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (res.ok) loadChampionships();
+      else alert("Erro ao mudar status");
+    } catch {
+      alert("Erro de conexão");
+    }
+  };
+
   const handleDelete = async (champ: any) => {
-    if (!confirm(`Tem certeza que deseja excluir "${champ.name}"? Isso apagará TODAS as rodadas, jogadores e estatísticas.`)) return;
+    if (
+      !confirm(
+        `Tem certeza que deseja excluir "${champ.name}"? Isso apagará TODAS as rodadas, jogadores e estatísticas.`
+      )
+    )
+      return;
     try {
       const res = await fetchWithAuth(`/championships/${champ.id}`, { method: "DELETE" });
       if (res.ok) loadChampionships();
@@ -103,42 +132,89 @@ export default function ChampionshipsPage() {
     }
   };
 
+  const filteredChampionships = championships.filter((c) => {
+    if (statusFilter === "ACTIVE") return c.status === "ACTIVE";
+    if (statusFilter === "FINISHED") return c.status === "FINISHED";
+    return true;
+  });
+
+  const activeCount = championships.filter((c) => c.status === "ACTIVE").length;
+  const finishedCount = championships.filter((c) => c.status === "FINISHED").length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Meus Campeonatos</h2>
-          <p className="text-zinc-400">Gerencie todos os seus torneios ativos e finalizados.</p>
+          <p className="text-zinc-400">Gerencie seus torneios em andamento ou histórico de concluídos.</p>
         </div>
         <Link href="/dashboard/championships/new">
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
             <Plus className="w-4 h-4 mr-2" />
             Criar Campeonato
           </Button>
         </Link>
       </div>
 
+      {/* FILTRO DE STATUS: TODOS / ATIVOS / CONCLUÍDOS */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setStatusFilter("ALL")}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            statusFilter === "ALL"
+              ? "bg-emerald-600 text-white"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+          }`}
+        >
+          Todos ({championships.length})
+        </button>
+        <button
+          onClick={() => setStatusFilter("ACTIVE")}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            statusFilter === "ACTIVE"
+              ? "bg-emerald-600 text-white"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+          }`}
+        >
+          🟢 Em Andamento ({activeCount})
+        </button>
+        <button
+          onClick={() => setStatusFilter("FINISHED")}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            statusFilter === "FINISHED"
+              ? "bg-emerald-600 text-white"
+              : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+          }`}
+        >
+          🏁 Concluídos ({finishedCount})
+        </button>
+      </div>
+
       {loading ? (
-        <div className="text-zinc-400">Carregando campeonatos...</div>
-      ) : championships.length === 0 ? (
+        <div className="text-zinc-400 py-8">Carregando campeonatos...</div>
+      ) : filteredChampionships.length === 0 ? (
         <div className="text-center py-20 bg-zinc-900 border border-zinc-800 rounded-xl">
           <Trophy className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-zinc-200">Nenhum campeonato encontrado</h3>
-          <p className="text-zinc-500 mb-6">Você ainda não criou nenhum campeonato.</p>
-          <Link href="/dashboard/championships/new">
-            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
-              Criar o primeiro
-            </Button>
-          </Link>
+          <h3 className="text-lg font-medium text-zinc-200">Nenhum campeonato nesta categoria</h3>
+          <p className="text-zinc-500 mb-6">Nenhum torneio encontrado no filtro selecionado.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {championships.map((champ) => (
-            <Card key={champ.id} className="bg-zinc-900 border-zinc-800 hover:border-emerald-500/30 transition-colors group">
+          {filteredChampionships.map((champ) => (
+            <Card
+              key={champ.id}
+              className={`bg-zinc-900 border transition-all group ${
+                champ.status === "FINISHED" ? "border-zinc-800/80 opacity-90" : "border-zinc-800 hover:border-emerald-500/30"
+              }`}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-start gap-3">
                   {champ.logoUrl ? (
-                    <img src={champ.logoUrl} alt={champ.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-zinc-700" />
+                    <img
+                      src={champ.logoUrl}
+                      alt={champ.name}
+                      className="w-12 h-12 rounded-full object-cover shrink-0 border border-zinc-700"
+                    />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-700">
                       <Trophy className="w-5 h-5 text-zinc-500" />
@@ -146,9 +222,17 @@ export default function ChampionshipsPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-base truncate">{champ.name}</CardTitle>
-                    <CardDescription className="text-zinc-500 text-xs mt-0.5">
-                      <span className={champ.status === 'ACTIVE' ? 'text-emerald-500' : 'text-zinc-400'}>{champ.status}</span>
-                      {" · "}{champ.players?.length || 0} jogadores
+                    <CardDescription className="text-zinc-500 text-xs mt-0.5 flex items-center gap-1.5">
+                      <span
+                        className={`font-semibold px-2 py-0.5 rounded-full text-[10px] ${
+                          champ.status === "ACTIVE"
+                            ? "bg-emerald-950 border border-emerald-800 text-emerald-400"
+                            : "bg-red-950 border border-red-800 text-red-400"
+                        }`}
+                      >
+                        {champ.status === "ACTIVE" ? "🟢 Em Andamento" : "🏁 Concluído"}
+                      </span>
+                      <span>· {champ.players?.length || 0} jog.</span>
                     </CardDescription>
                   </div>
                 </div>
@@ -159,10 +243,22 @@ export default function ChampionshipsPage() {
                 </div>
                 <div className="flex gap-2">
                   <Link href={`/dashboard/championships/${champ.id}`} className="flex-1">
-                    <Button variant="secondary" className="w-full bg-zinc-800 text-white hover:bg-zinc-700 h-8 text-xs">
+                    <Button
+                      variant="secondary"
+                      className="w-full bg-zinc-800 text-white hover:bg-zinc-700 h-8 text-xs font-semibold"
+                    >
                       Abrir
                     </Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300"
+                    onClick={() => toggleChampStatus(champ)}
+                    title="Mudar status do campeonato"
+                  >
+                    {champ.status === "ACTIVE" ? "Finalizar" : "Reabrir"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -216,17 +312,34 @@ export default function ChampionshipsPage() {
                     disabled={uploadingLogo}
                   />
                   <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center pointer-events-none">
-                    {uploadingLogo ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Upload className="w-4 h-4 text-white" />}
+                    {uploadingLogo ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 text-white" />
+                    )}
                   </div>
                 </div>
                 <div className="flex-1 space-y-1">
                   <Label>Nome do Campeonato</Label>
                   <Input
                     value={editForm.name}
-                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                     className="bg-zinc-950 border-zinc-800"
                   />
                 </div>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-1">
+                <Label>Status do Campeonato</Label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white"
+                >
+                  <option value="ACTIVE">🟢 Em Andamento (Ativo)</option>
+                  <option value="FINISHED">🏁 Concluído (Finalizado)</option>
+                </select>
               </div>
 
               {/* Config */}
@@ -235,13 +348,15 @@ export default function ChampionshipsPage() {
                 <Input
                   type="number"
                   value={editForm.playersPerTeam}
-                  onChange={e => setEditForm(f => ({ ...f, playersPerTeam: Number(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, playersPerTeam: Number(e.target.value) }))}
                   className="bg-zinc-950 border-zinc-800"
                 />
               </div>
 
               <div className="border-t border-zinc-800 pt-4">
-                <h4 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wider">Regras de Pontuação</h4>
+                <h4 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wider">
+                  Regras de Pontuação
+                </h4>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: "Pts por Vitória", key: "winPoints" },
@@ -257,7 +372,9 @@ export default function ChampionshipsPage() {
                       <Input
                         type="number"
                         value={(editForm as any)[key]}
-                        onChange={e => setEditForm(f => ({ ...f, [key]: Number(e.target.value) }))}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, [key]: Number(e.target.value) }))
+                        }
                         className="bg-zinc-950 border-zinc-800 h-8 text-sm"
                       />
                     </div>
@@ -267,8 +384,12 @@ export default function ChampionshipsPage() {
             </div>
 
             <div className="p-5 border-t border-zinc-800 flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setEditingChamp(null)} className="text-zinc-400">Cancelar</Button>
-              <Button onClick={handleSaveEdit} className="bg-emerald-600 hover:bg-emerald-700">Salvar Alterações</Button>
+              <Button variant="ghost" onClick={() => setEditingChamp(null)} className="text-zinc-400">
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveEdit} className="bg-emerald-600 hover:bg-emerald-700 font-bold">
+                Salvar Alterações
+              </Button>
             </div>
           </div>
         </div>

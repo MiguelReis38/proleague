@@ -158,7 +158,7 @@ export class ReportsService {
 
       // Footer
       doc.fontSize(9).fillColor(gray)
-        .text('Gerado por ProLeague.com', 50, doc.page.height - 50, { align: 'center' });
+        .text('Gerado por ProLeague · Desenvolvido por Miguel Reis', 50, doc.page.height - 50, { align: 'center' });
 
       doc.end();
     });
