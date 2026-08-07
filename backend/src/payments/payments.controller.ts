@@ -1,20 +1,57 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Request,
+  UseGuards,
+  UnauthorizedException,
+  HttpCode,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { PaymentsService } from './payments.service';
 
 @Controller('payments')
 export class PaymentsController {
-  
-  @Post('checkout')
-  async createCheckoutSession(@Body() body: { planId: string; userId: string }) {
-    if (!body.userId) {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('subscription')
+  async getSubscription(@Request() req) {
+    return this.paymentsService.getUserSubscription(req.user.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('subscribe')
+  async createSubscribeSession(
+    @Request() req,
+    @Body() body: { planId: string },
+  ) {
+    if (!req.user || !req.user.id) {
       throw new UnauthorizedException('Usuário não autenticado');
     }
-    
-    // Simula uma chamada ao Stripe/Mercado Pago que gera uma URL de checkout
-    const mockCheckoutUrl = `http://localhost:3000/dashboard/billing/success?session_id=mock_session_${Date.now()}`;
-    
-    return {
-      url: mockCheckoutUrl,
-      message: 'Checkout gerado com sucesso (Mock)',
-    };
+    return this.paymentsService.createCheckoutPreference(
+      req.user.id,
+      body.planId,
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('checkout')
+  async createCheckoutSession(
+    @Request() req,
+    @Body() body: { planId: string },
+  ) {
+    return this.paymentsService.createCheckoutPreference(
+      req.user.id,
+      body.planId,
+    );
+  }
+
+  @Post('webhook')
+  @HttpCode(200)
+  async handleWebhook(@Body() body: any, @Query() query: any) {
+    return this.paymentsService.handleWebhook(body, query);
   }
 }
