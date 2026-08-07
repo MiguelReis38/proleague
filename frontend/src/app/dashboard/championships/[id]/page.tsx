@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt, Share2, QrCode, DollarSign } from "lucide-react";
+import { Trophy, Users, Play, ArrowLeft, FileText, Settings, BarChart, LayoutGrid, X, Trash2, LockKeyhole, LockOpen, Target, Shirt, Share2, QrCode, DollarSign, Flame, Award } from "lucide-react";
 import Link from "next/link";
 import { fetchWithAuth } from "@/lib/api";
+import { FifaCardModal } from "@/components/FifaCardModal";
+import { TrophyModal } from "@/components/TrophyModal";
 
 export default function ChampionshipDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,6 +28,10 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
   // Edit Points State
   const [editingPointsPlayer, setEditingPointsPlayer] = useState<any>(null);
   const [pointsForm, setPointsForm] = useState("");
+
+  // FIFA Card & Trophy Modal States
+  const [selectedFifaPlayer, setSelectedFifaPlayer] = useState<any>(null);
+  const [showTrophyModal, setShowTrophyModal] = useState(false);
 
   const loadData = async () => {
     try {
@@ -319,6 +325,12 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button
+                onClick={() => setShowTrophyModal(true)}
+                variant="outline" className="border-yellow-600/60 text-yellow-400 hover:bg-yellow-950/60 h-8 text-xs font-bold"
+              >
+                <Award className="w-3.5 h-3.5 mr-1.5 text-yellow-400" /> Troféu Digital
+              </Button>
+              <Button
                 onClick={async () => {
                   const url = `${window.location.origin}/public/championship/${id}`;
                   // @ts-ignore
@@ -565,10 +577,28 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
                 <Label>Pontuação Manual (+/-)</Label>
                 <Input type="number" value={pointsForm} onChange={e => setPointsForm(e.target.value)} className="bg-zinc-950 border-zinc-800 text-xl font-bold text-center" />
               </div>
-              <Button onClick={handleSavePointsEdit} className="w-full bg-emerald-600 hover:bg-emerald-700">Confirmar Pontuação</Button>
-            </div>
-          </div>
-        </div>
+      {/* MODAL CARD EA FC / FIFA */}
+      {selectedFifaPlayer && (
+        <FifaCardModal
+          player={selectedFifaPlayer}
+          championshipName={championship?.name || "ProLeague"}
+          onClose={() => setSelectedFifaPlayer(null)}
+        />
+      )}
+
+      {/* MODAL TROFÉU DIGITAL & HALL DA FAMA */}
+      {showTrophyModal && (
+        <TrophyModal
+          championshipName={championship?.name || "ProLeague"}
+          data={{
+            championName: leaderboard[0]?.name,
+            topScorerName: scorers[0]?.name,
+            topScorerGoals: scorers[0]?.goals,
+            bestGoalkeeperName: goalkeepers[0]?.name,
+            bestGoalkeeperSaves: goalkeepers[0]?.saves,
+          }}
+          onClose={() => setShowTrophyModal(false)}
+        />
       )}
     </div>
   );
