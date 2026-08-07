@@ -76,6 +76,11 @@ export class PaymentsService {
       auto_return: 'approved',
       external_reference: `${user.id}:${planId.toUpperCase()}`,
       notification_url: `${backendUrl}/payments/webhook`,
+      payment_methods: {
+        excluded_payment_methods: [],
+        excluded_payment_types: [],
+        installments: 12,
+      },
     };
 
     try {
