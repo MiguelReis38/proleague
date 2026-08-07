@@ -1,0 +1,67 @@
+workflows:
+  ios-release:
+    name: ProLeague iOS — App Store
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.miguelreis.proleague
+      vars:
+        APP_STORE_APPLE_ID: YOUR_APP_APPLE_ID # preencher depois de criar o app na App Store Connect
+      node: 20
+      xcode: latest
+      cocoapods: default
+
+    working_directory: frontend
+
+    scripts:
+      - name: Instalar dependências Node
+        script: npm install
+
+      - name: Adicionar plataforma iOS (se não existir)
+        script: |
+          if [ ! -d "ios" ]; then
+            echo "Adicionando plataforma iOS..."
+            npx cap add ios
+          else
+            echo "Plataforma iOS já existe."
+          fi
+
+      - name: Sincronizar Capacitor com iOS
+        script: npx cap sync ios
+
+      - name: Instalar CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Configurar assinatura de código
+        script: xcode-project use-profiles
+
+      - name: Build iOS (.ipa)
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App \
+            --config Release
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      email:
+        recipients:
+          - seu-email@gmail.com # trocar pelo seu email
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        # Envia para TestFlight automaticamente após build
+        submit_to_testflight: true
+        # Para publicar direto na loja (sem TestFlight), mude para true:
+        submit_to_app_store: false
