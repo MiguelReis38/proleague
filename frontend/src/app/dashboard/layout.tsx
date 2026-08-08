@@ -3,7 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Trophy, Users, CalendarDays, Settings, LogOut, Crown, AlertTriangle, Clock, DollarSign, BarChart, ArrowLeftRight } from "lucide-react";
+import {
+  Trophy,
+  Users,
+  CalendarDays,
+  Settings,
+  LogOut,
+  Crown,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  BarChart,
+  ArrowLeftRight,
+} from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 
 type Subscription = {
@@ -78,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     );
 
-  const navItems = [
+  const desktopNavItems = [
     { name: "Meus Campeonatos", href: "/dashboard/championships", icon: Trophy },
     { name: "Classificação", href: "/dashboard/standings", icon: BarChart },
     { name: "Jogadores", href: "/dashboard/players", icon: Users },
@@ -86,6 +98,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Financeiro", href: "/dashboard/finance", icon: DollarSign },
     { name: "Assinatura PRO", href: "/dashboard/billing", icon: Crown },
     { name: "Configurações", href: "/dashboard/settings", icon: Settings },
+  ];
+
+  const mobileNavItems = [
+    { name: "Torneios", href: "/dashboard/championships", icon: Trophy },
+    { name: "Tabela", href: "/dashboard/standings", icon: BarChart },
+    { name: "Atletas", href: "/dashboard/players", icon: Users },
+    { name: "Rodadas", href: "/dashboard/matches", icon: CalendarDays },
+    { name: "Caixa", href: "/dashboard/finance", icon: DollarSign },
   ];
 
   // Cálculo de expiração da assinatura
@@ -104,12 +124,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }
 
-  const activeChamp = championships.find((c) => c.id === activeChampId);
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col shrink-0">
+      {/* DESKTOP SIDEBAR (OCULTA NO MOBILE) */}
+      <aside className="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 flex-col shrink-0">
         <div className="h-16 flex items-center px-6 border-b border-zinc-800 justify-between">
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600">
             ProLeague
@@ -120,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
-          {navItems.map((item) => {
+          {desktopNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -151,21 +169,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* HEADER COM SELETOR DE CAMPEONATO */}
-        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10 shrink-0 gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* HEADER COM SELETOR DE CAMPEONATO NO TOPO */}
+        <header className="h-16 flex items-center justify-between px-4 sm:px-6 md:px-8 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-30 shrink-0 gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             {championships.length > 0 && (
-              <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 max-w-xs md:max-w-md w-full">
+              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 flex-1 max-w-full md:max-w-md">
                 <Trophy className="w-4 h-4 text-emerald-400 shrink-0" />
                 <select
                   value={activeChampId}
                   onChange={(e) => handleSelectChampionship(e.target.value)}
-                  className="bg-transparent text-sm text-white font-semibold focus:outline-none w-full cursor-pointer truncate"
+                  className="bg-transparent text-xs sm:text-sm text-white font-bold focus:outline-none w-full cursor-pointer truncate"
                 >
                   <option value="" disabled className="bg-zinc-900 text-zinc-400">
-                    Selecione um Campeonato...
+                    Selecione um Torneio...
                   </option>
                   {championships.map((c) => (
                     <option key={c.id} value={c.id} className="bg-zinc-900 text-white">
@@ -178,18 +196,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <Link
               href="/dashboard/championships"
-              className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 hover:text-emerald-400 bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg font-medium transition-colors shrink-0"
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-emerald-400 bg-zinc-900 border border-zinc-800 px-2.5 py-2 rounded-lg font-medium transition-colors shrink-0"
               title="Trocar ou gerenciar campeonatos"
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
-              Trocar Torneio
+              <span className="hidden sm:inline">Trocar Torneio</span>
             </Link>
           </div>
 
           {sub && (
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 font-semibold text-emerald-400">
-                Plano {sub.planType}
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-zinc-900 border border-zinc-800 font-bold text-emerald-400">
+                {sub.planType}
               </span>
             </div>
           )}
@@ -198,39 +216,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Banner de Aviso de Expiração */}
         {expirationNotice && (
           <div
-            className={`px-6 py-3 flex items-center justify-between text-xs md:text-sm font-medium ${
+            className={`px-4 sm:px-6 py-2.5 flex items-center justify-between text-xs font-medium ${
               expirationNotice.type === "expired"
                 ? "bg-red-950/80 border-b border-red-800/60 text-red-200"
                 : "bg-yellow-950/80 border-b border-yellow-800/60 text-yellow-200"
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {expirationNotice.type === "expired" ? (
                 <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
               ) : (
                 <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
               )}
-              <span>
+              <span className="truncate">
                 {expirationNotice.type === "expired"
-                  ? `Sua assinatura ${expirationNotice.planName} expirou. Renove para continuar com todos os benefícios.`
-                  : `Atenção: Sua assinatura ${expirationNotice.planName} vence em ${expirationNotice.daysLeft} dia(s).`}
+                  ? `Assinatura ${expirationNotice.planName} expirou.`
+                  : `Vence em ${expirationNotice.daysLeft} dia(s).`}
               </span>
             </div>
             <Link
               href="/dashboard/billing"
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                expirationNotice.type === "expired"
-                  ? "bg-red-600 hover:bg-red-500 text-white"
-                  : "bg-yellow-500 hover:bg-yellow-400 text-black"
-              }`}
+              className="px-2.5 py-1 rounded text-xs font-bold bg-yellow-500 text-black shrink-0 ml-2"
             >
-              Renovar Agora
+              Renovar
             </Link>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">{children}</div>
+        {/* CONTEÚDO PRINCIPAL COM PADDING ADAPTADO AO MOBILE */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pb-24 md:pb-8">{children}</div>
       </main>
+
+      {/* BARRA DE NAVEGAÇÃO INFERIOR NO CELULAR (MOBILE BOTTOM NAVBAR) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        {mobileNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-all ${
+                isActive ? "text-emerald-400 font-bold scale-105" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? "text-emerald-400" : "text-zinc-400"}`} />
+              <span className="text-[10px] font-medium tracking-tight">{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
