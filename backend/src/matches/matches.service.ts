@@ -7,10 +7,35 @@ export class MatchesService {
   constructor(private prisma: PrismaService) {}
 
   async updateScore(matchId: string, homeScore: number, awayScore: number) {
-    return this.prisma.match.update({
+    const match = await this.prisma.match.update({
       where: { id: matchId },
-      data: { homeScore, awayScore }
+      data: { homeScore, awayScore, status: 'FINISHED' }
     });
+
+    const matchDetails = await this.prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        homeTeam: { include: { players: true } },
+        awayTeam: { include: { players: true } },
+      }
+    });
+
+    if (matchDetails) {
+      const playerIds = [
+        ...(matchDetails.homeTeam?.players.map(p => p.playerId) || []),
+        ...(matchDetails.awayTeam?.players.map(p => p.playerId) || []),
+      ];
+
+      for (const playerId of playerIds) {
+        await this.prisma.matchStat.upsert({
+          where: { matchId_playerId: { matchId: match.id, playerId } },
+          create: { matchId: match.id, playerId, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, saves: 0 },
+          update: {},
+        });
+      }
+    }
+
+    return match;
   }
 
   async updateStatus(matchId: string, status: string) {

@@ -92,9 +92,17 @@ export class ChampionshipsService {
       teamPlayerMap.set(`${tp.teamId}-${tp.playerId}`, tp.isBorrowed);
     });
 
-    // Buscar todas as estatísticas de partidas concluídas
+    // Buscar todas as estatísticas de partidas concluídas ou rodadas fechadas
     const matchStats = await this.prisma.matchStat.findMany({
-      where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+      where: {
+        match: {
+          round: { championshipId: id },
+          OR: [
+            { status: 'FINISHED' },
+            { round: { closed: true } }
+          ]
+        }
+      },
       include: {
         match: true
       }
