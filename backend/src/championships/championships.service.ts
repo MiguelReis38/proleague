@@ -204,7 +204,7 @@ export class ChampionshipsService {
     await this.findOne(userId, id);
     const stats = await this.prisma.matchStat.groupBy({
       by: ['playerId'],
-      where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+      where: { match: { round: { championshipId: id } } },
       _sum: { goals: true }
     });
 
@@ -227,7 +227,7 @@ export class ChampionshipsService {
     await this.findOne(userId, id);
     const stats = await this.prisma.matchStat.groupBy({
       by: ['playerId'],
-      where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+      where: { match: { round: { championshipId: id } } },
       _sum: { saves: true }
     });
 

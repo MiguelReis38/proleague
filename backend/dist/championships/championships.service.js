@@ -84,7 +84,15 @@ let ChampionshipsService = class ChampionshipsService {
             teamPlayerMap.set(`${tp.teamId}-${tp.playerId}`, tp.isBorrowed);
         });
         const matchStats = await this.prisma.matchStat.findMany({
-            where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+            where: {
+                match: {
+                    round: { championshipId: id },
+                    OR: [
+                        { status: 'FINISHED' },
+                        { round: { closed: true } }
+                    ]
+                }
+            },
             include: {
                 match: true
             }
@@ -185,7 +193,7 @@ let ChampionshipsService = class ChampionshipsService {
         await this.findOne(userId, id);
         const stats = await this.prisma.matchStat.groupBy({
             by: ['playerId'],
-            where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+            where: { match: { round: { championshipId: id } } },
             _sum: { goals: true }
         });
         const players = await this.prisma.player.findMany({ where: { championshipId: id } });
@@ -205,7 +213,7 @@ let ChampionshipsService = class ChampionshipsService {
         await this.findOne(userId, id);
         const stats = await this.prisma.matchStat.groupBy({
             by: ['playerId'],
-            where: { match: { round: { championshipId: id }, status: 'FINISHED' } },
+            where: { match: { round: { championshipId: id } } },
             _sum: { saves: true }
         });
         const players = await this.prisma.player.findMany({ where: { championshipId: id } });

@@ -117,6 +117,34 @@ let RoundsService = class RoundsService {
         });
         if (!round)
             throw new common_1.NotFoundException('Round not found');
+        await this.prisma.match.updateMany({
+            where: { roundId },
+            data: { status: 'FINISHED' }
+        });
+        const roundDetails = await this.prisma.round.findUnique({
+            where: { id: roundId },
+            include: {
+                teams: { include: { players: true } },
+                matches: true,
+            }
+        });
+        if (roundDetails) {
+            for (const match of roundDetails.matches) {
+                const homeTeam = roundDetails.teams.find(t => t.id === match.homeTeamId);
+                const awayTeam = roundDetails.teams.find(t => t.id === match.awayTeamId);
+                const playerIds = [
+                    ...(homeTeam?.players.map(p => p.playerId) || []),
+                    ...(awayTeam?.players.map(p => p.playerId) || []),
+                ];
+                for (const playerId of playerIds) {
+                    await this.prisma.matchStat.upsert({
+                        where: { matchId_playerId: { matchId: match.id, playerId } },
+                        create: { matchId: match.id, playerId, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, saves: 0 },
+                        update: {},
+                    });
+                }
+            }
+        }
         return this.prisma.round.update({ where: { id: roundId }, data: { closed: true } });
     }
     async reopen(userId, roundId) {

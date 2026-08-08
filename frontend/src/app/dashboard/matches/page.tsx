@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, Play, Trophy, ChevronDown, ChevronUp, LockKeyhole, LockOpen, Dices, ArrowRight } from "lucide-react";
+import { CalendarDays, Play, Trophy, ChevronDown, ChevronUp, LockKeyhole, LockOpen, Dices, ArrowRight, Trash2 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,28 @@ export default function MatchesGlobalPage() {
   const [championships, setChampionships] = useState<any[]>([]);
   const [expandedRounds, setExpandedRounds] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteRound = async (round: RoundGroup) => {
+    if (
+      !confirm(
+        `Tem certeza que deseja excluir a Rodada ${round.number}? Todas as partidas, estatísticas e pontos dessa rodada serão totalmente ANULADOS e apagados.`
+      )
+    )
+      return;
+
+    try {
+      const res = await fetchWithAuth(`/championships/${round.championshipId}/rounds/${round.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setRounds((prev) => prev.filter((r) => r.id !== round.id));
+      } else {
+        alert("Erro ao excluir rodada.");
+      }
+    } catch {
+      alert("Erro de conexão.");
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -186,6 +208,19 @@ export default function MatchesGlobalPage() {
                         Entrar na Rodada <ArrowRight className="w-3 h-3 ml-1" />
                       </Button>
                     </Link>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0 border-red-900/50 text-red-500 hover:bg-red-950"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteRound(round);
+                      }}
+                      title="Excluir rodada (anula pontos e gols)"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
 
                     <button className="text-zinc-400 hover:text-white p-1">
                       {isExpanded ? (
