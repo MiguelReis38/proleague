@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Trophy,
   Users,
@@ -23,34 +22,15 @@ import {
   Mail,
   Send,
   Lock,
-  User,
-  KeyRound,
-  X,
   Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { API_URL } from "@/lib/api";
 
 export default function LandingPage() {
-  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Login state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
-
-  // Forgot Password state
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetMsg, setResetMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Contact form state
   const [contactName, setContactName] = useState("");
@@ -64,61 +44,6 @@ export default function LandingPage() {
       setIsLoggedIn(true);
     }
   }, []);
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginLoading(true);
-    setLoginError("");
-
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "E-mail ou senha incorretos");
-      }
-
-      localStorage.setItem("token", data.access_token);
-      router.push("/dashboard");
-    } catch (err: any) {
-      setLoginError(err.message);
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setResetLoading(true);
-    setResetMsg(null);
-
-    try {
-      const res = await fetch(`${API_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail, newPassword }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setResetMsg({ type: "success", text: data.message || "Senha redefinida com sucesso!" });
-        setEmail(resetEmail);
-        setPassword(newPassword);
-        setTimeout(() => setShowForgotModal(false), 2000);
-      } else {
-        setResetMsg({ type: "error", text: data.message || "E-mail não encontrado." });
-      }
-    } catch (err) {
-      setResetMsg({ type: "error", text: "Erro de comunicação com o servidor." });
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,13 +101,14 @@ export default function LandingPage() {
               </Link>
             ) : (
               <>
-                <Button
-                  onClick={() => setShowLoginModal(true)}
-                  variant="outline"
-                  className="border-zinc-700 text-zinc-200 hover:bg-zinc-800 hover:text-white font-semibold"
-                >
-                  <Lock className="w-4 h-4 mr-2 text-emerald-400" /> Fazer Login
-                </Button>
+                <Link href="/login">
+                  <Button
+                    variant="outline"
+                    className="border-zinc-700 text-zinc-200 hover:bg-zinc-800 hover:text-white font-semibold"
+                  >
+                    <Lock className="w-4 h-4 mr-2 text-emerald-400" /> Fazer Login
+                  </Button>
+                </Link>
                 <Link href="/register">
                   <Button className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                     Criar Conta Grátis
@@ -233,16 +159,11 @@ export default function LandingPage() {
               Contato
             </a>
             <div className="pt-2 flex flex-col gap-2">
-              <Button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setShowLoginModal(true);
-                }}
-                variant="outline"
-                className="w-full border-zinc-700"
-              >
-                Fazer Login
-              </Button>
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-zinc-700">
+                  Fazer Login
+                </Button>
+              </Link>
               <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="w-full bg-emerald-500 text-zinc-950 font-bold">
                   Criar Conta Grátis
@@ -285,12 +206,11 @@ export default function LandingPage() {
               </Link>
             ) : (
               <>
-                <Button
-                  onClick={() => setShowLoginModal(true)}
-                  className="h-14 px-8 text-base font-extrabold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.4)] group"
-                >
-                  <Lock className="w-5 h-5 mr-2" /> Fazer Login / Entrar
-                </Button>
+                <Link href="/login">
+                  <Button className="h-14 px-8 text-base font-extrabold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.4)] group">
+                    <Lock className="w-5 h-5 mr-2" /> Fazer Login / Entrar
+                  </Button>
+                </Link>
                 <Link href="/register">
                   <Button
                     variant="outline"
@@ -576,166 +496,6 @@ export default function LandingPage() {
           <p>&copy; 2026 ProLeague. Todos os direitos reservados. Desenvolvido por Miguel Reis.</p>
         </div>
       </footer>
-
-      {/* ─── MODAL DE LOGIN INTEGRADO ────────────────────────────────────────── */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md p-8 relative shadow-2xl space-y-6">
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="absolute top-5 right-5 text-zinc-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-2 text-center">
-              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <Lock className="w-6 h-6 text-emerald-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">Acessar Plataforma</h3>
-              <p className="text-xs text-zinc-400">
-                Insira suas credenciais de organizador para gerenciar seu campeonato.
-              </p>
-            </div>
-
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-300">E-mail</Label>
-                <Input
-                  type="email"
-                  required
-                  placeholder="seuemail@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-zinc-950 border-zinc-800 text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <Label className="text-xs text-zinc-300">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowLoginModal(false);
-                      setResetEmail(email);
-                      setShowForgotModal(true);
-                    }}
-                    className="text-xs text-emerald-400 hover:underline"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                </div>
-                <Input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-zinc-950 border-zinc-800 text-white"
-                />
-              </div>
-
-              {loginError && (
-                <div className="p-3 rounded-lg bg-red-950/80 border border-red-800 text-red-300 text-xs font-medium">
-                  {loginError}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-              >
-                {loginLoading ? "Autenticando..." : "Entrar no Painel"}
-              </Button>
-            </form>
-
-            <div className="text-center pt-2 border-t border-zinc-800 text-xs text-zinc-400">
-              Ainda não possui conta?{" "}
-              <Link
-                href="/register"
-                onClick={() => setShowLoginModal(false)}
-                className="text-white font-bold hover:text-emerald-400"
-              >
-                Cadastre-se gratuitamente
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL DE REDEFINIR SENHA ────────────────────────────────────────── */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md p-8 relative shadow-2xl space-y-4">
-            <button
-              onClick={() => setShowForgotModal(false)}
-              className="absolute top-5 right-5 text-zinc-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Redefinir Senha</h3>
-            </div>
-
-            <p className="text-xs text-zinc-400">
-              Digite seu e-mail cadastrado e escolha a nova senha para acessar sua conta.
-            </p>
-
-            <form onSubmit={handleResetPassword} className="space-y-4 pt-2">
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-300">E-mail Cadastrado</Label>
-                <Input
-                  type="email"
-                  required
-                  placeholder="seuemail@exemplo.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="bg-zinc-950 border-zinc-800 text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-300">Nova Senha</Label>
-                <Input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-zinc-950 border-zinc-800 text-white"
-                />
-              </div>
-
-              {resetMsg && (
-                <div
-                  className={`p-3 rounded-lg text-xs font-medium flex items-center gap-2 ${
-                    resetMsg.type === "success"
-                      ? "bg-emerald-950/80 border border-emerald-800 text-emerald-300"
-                      : "bg-red-950/80 border border-red-800 text-red-300"
-                  }`}
-                >
-                  {resetMsg.type === "success" && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  )}
-                  <span>{resetMsg.text}</span>
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={resetLoading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 font-bold text-white"
-              >
-                {resetLoading ? "Redefinindo..." : "Confirmar Nova Senha"}
-              </Button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
