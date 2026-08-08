@@ -36,6 +36,9 @@ export default function ChampionshipDetailsPage({ params }: { params: Promise<{ 
   const loadData = async () => {
     try {
       setLoading(true);
+      if (typeof window !== "undefined" && id) {
+        localStorage.setItem("activeChampionshipId", id as string);
+      }
       const [champRes, leadRes, scorersRes, gkRes] = await Promise.all([
         fetchWithAuth(`/championships/${id}`),
         fetchWithAuth(`/championships/${id}/leaderboard`),

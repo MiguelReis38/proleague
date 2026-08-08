@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Trophy, Users, CalendarDays, Settings, LogOut, LayoutDashboard, Crown, AlertTriangle, Clock, DollarSign, BarChart } from "lucide-react";
+import { Trophy, Users, CalendarDays, Settings, LogOut, Crown, AlertTriangle, Clock, DollarSign, BarChart, ArrowLeftRight } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 
 type Subscription = {
@@ -12,37 +12,74 @@ type Subscription = {
   currentPeriodEnd?: string;
 };
 
+type Championship = {
+  id: string;
+  name: string;
+  logoUrl?: string;
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<Subscription | null>(null);
+  const [championships, setChampionships] = useState<Championship[]>([]);
+  const [activeChampId, setActiveChampId] = useState<string>("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
-    } else {
-      setLoading(false);
-      fetchWithAuth("/payments/subscription")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data) setSub(data);
-        })
-        .catch(() => {});
+      return;
     }
-  }, [router]);
+
+    setLoading(false);
+
+    // Carregar Assinatura
+    fetchWithAuth("/payments/subscription")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setSub(data);
+      })
+      .catch(() => {});
+
+    // Carregar Campeonatos do Organizador
+    fetchWithAuth("/championships")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setChampionships(data);
+        const storedId = localStorage.getItem("activeChampionshipId");
+        if (storedId && data.some((c: any) => c.id === storedId)) {
+          setActiveChampId(storedId);
+        } else if (data.length > 0) {
+          setActiveChampId(data[0].id);
+        }
+      })
+      .catch(() => {});
+  }, [router, pathname]);
+
+  const handleSelectChampionship = (champId: string) => {
+    if (!champId) return;
+    setActiveChampId(champId);
+    localStorage.setItem("activeChampionshipId", champId);
+    router.push(`/dashboard/championships/${champId}`);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("activeChampionshipId");
     router.push("/login");
   };
 
-  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">Carregando...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">
+        Carregando...
+      </div>
+    );
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Campeonatos", href: "/dashboard/championships", icon: Trophy },
+    { name: "Meus Campeonatos", href: "/dashboard/championships", icon: Trophy },
     { name: "Classificação", href: "/dashboard/standings", icon: BarChart },
     { name: "Jogadores", href: "/dashboard/players", icon: Users },
     { name: "Rodadas & Partidas", href: "/dashboard/matches", icon: CalendarDays },
@@ -67,13 +104,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }
 
+  const activeChamp = championships.find((c) => c.id === activeChampId);
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row">
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col shrink-0">
-        <div className="h-16 flex items-center px-6 border-b border-zinc-800">
+        <div className="h-16 flex items-center px-6 border-b border-zinc-800 justify-between">
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600">
             ProLeague
+          </span>
+          <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-bold">
+            v2.0
           </span>
         </div>
 
@@ -87,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-emerald-600/10 text-emerald-400"
+                    ? "bg-emerald-600/10 text-emerald-400 font-bold"
                     : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
                 }`}
               >
@@ -111,12 +153,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
-          <h1 className="text-lg font-medium text-zinc-200">
-            {navItems.find((i) => i.href === pathname)?.name || "Dashboard"}
-          </h1>
+        {/* HEADER COM SELETOR DE CAMPEONATO */}
+        <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10 shrink-0 gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {championships.length > 0 && (
+              <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 max-w-xs md:max-w-md w-full">
+                <Trophy className="w-4 h-4 text-emerald-400 shrink-0" />
+                <select
+                  value={activeChampId}
+                  onChange={(e) => handleSelectChampionship(e.target.value)}
+                  className="bg-transparent text-sm text-white font-semibold focus:outline-none w-full cursor-pointer truncate"
+                >
+                  <option value="" disabled className="bg-zinc-900 text-zinc-400">
+                    Selecione um Campeonato...
+                  </option>
+                  {championships.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-zinc-900 text-white">
+                      🏆 {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <Link
+              href="/dashboard/championships"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 hover:text-emerald-400 bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg font-medium transition-colors shrink-0"
+              title="Trocar ou gerenciar campeonatos"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              Trocar Torneio
+            </Link>
+          </div>
+
           {sub && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 font-semibold text-emerald-400">
                 Plano {sub.planType}
               </span>
@@ -158,7 +229,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">{children}</div>
       </main>
     </div>
   );
