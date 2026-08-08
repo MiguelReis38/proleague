@@ -13,6 +13,30 @@ export declare class RoundsService {
     }>;
     private shuffle;
     private distribute;
+    delete(userId: string, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
+    close(userId: string, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
+    reopen(userId: string, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
     findAllByChampionship(userId: string, championshipId: string): Promise<({
         matches: ({
             homeTeam: {
@@ -36,11 +60,11 @@ export declare class RoundsService {
             createdAt: Date;
             updatedAt: Date;
             status: string;
+            roundId: string;
             homeTeamId: string;
             awayTeamId: string;
             homeScore: number;
             awayScore: number;
-            roundId: string;
         })[];
         teams: ({
             players: ({
@@ -54,12 +78,14 @@ export declare class RoundsService {
                     photoUrl: string | null;
                     category: string;
                     birthDate: Date;
+                    manualPoints: number;
                     championshipId: string;
                 };
             } & {
                 id: string;
-                playerId: string;
                 teamId: string;
+                playerId: string;
+                isBorrowed: boolean;
             })[];
         } & {
             name: string;

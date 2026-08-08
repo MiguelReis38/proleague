@@ -28,6 +28,15 @@ let RoundsController = class RoundsController {
     findAll(req, championshipId) {
         return this.roundsService.findAllByChampionship(req.user.id, championshipId);
     }
+    deleteRound(req, roundId) {
+        return this.roundsService.delete(req.user.id, roundId);
+    }
+    closeRound(req, roundId) {
+        return this.roundsService.close(req.user.id, roundId);
+    }
+    reopenRound(req, roundId) {
+        return this.roundsService.reopen(req.user.id, roundId);
+    }
 };
 exports.RoundsController = RoundsController;
 __decorate([
@@ -47,6 +56,30 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], RoundsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Delete)(':roundId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('roundId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], RoundsController.prototype, "deleteRound", null);
+__decorate([
+    (0, common_1.Put)(':roundId/close'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('roundId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], RoundsController.prototype, "closeRound", null);
+__decorate([
+    (0, common_1.Put)(':roundId/reopen'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('roundId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], RoundsController.prototype, "reopenRound", null);
 exports.RoundsController = RoundsController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('championships/:championshipId/rounds'),

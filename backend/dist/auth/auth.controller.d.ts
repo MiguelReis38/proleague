@@ -20,4 +20,10 @@ export declare class AuthController {
             email: string;
         };
     }>;
+    resetPassword(data: {
+        email: string;
+        newPassword: string;
+    }): Promise<{
+        message: string;
+    }>;
 }

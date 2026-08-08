@@ -31,6 +31,12 @@ let MatchesController = class MatchesController {
     upsertStat(id, updateMatchStatDto) {
         return this.matchesService.upsertStat(id, updateMatchStatDto);
     }
+    borrowPlayer(teamId, playerId) {
+        return this.matchesService.borrowPlayer(teamId, playerId);
+    }
+    updateTeamPhoto(teamId, photoUrl) {
+        return this.matchesService.updateTeamPhoto(teamId, photoUrl);
+    }
 };
 exports.MatchesController = MatchesController;
 __decorate([
@@ -58,6 +64,22 @@ __decorate([
     __metadata("design:paramtypes", [String, update_match_stat_dto_1.UpdateMatchStatDto]),
     __metadata("design:returntype", void 0)
 ], MatchesController.prototype, "upsertStat", null);
+__decorate([
+    (0, common_1.Post)('borrow'),
+    __param(0, (0, common_1.Body)('teamId')),
+    __param(1, (0, common_1.Body)('playerId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], MatchesController.prototype, "borrowPlayer", null);
+__decorate([
+    (0, common_1.Put)('team/:teamId/photo'),
+    __param(0, (0, common_1.Param)('teamId')),
+    __param(1, (0, common_1.Body)('photoUrl')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], MatchesController.prototype, "updateTeamPhoto", null);
 exports.MatchesController = MatchesController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('matches'),

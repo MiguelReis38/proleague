@@ -31,6 +31,12 @@ let PlayersController = class PlayersController {
     remove(req, championshipId, id) {
         return this.playersService.remove(req.user.id, championshipId, id);
     }
+    update(req, championshipId, id, updateData) {
+        return this.playersService.update(req.user.id, championshipId, id, updateData);
+    }
+    updateManualPoints(req, championshipId, id, points) {
+        return this.playersService.updateManualPoints(req.user.id, championshipId, id, points);
+    }
 };
 exports.PlayersController = PlayersController;
 __decorate([
@@ -59,6 +65,26 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", void 0)
 ], PlayersController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('championshipId')),
+    __param(2, (0, common_1.Param)('id')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, Object]),
+    __metadata("design:returntype", void 0)
+], PlayersController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/manual-points'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('championshipId')),
+    __param(2, (0, common_1.Param)('id')),
+    __param(3, (0, common_1.Body)('points')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, Number]),
+    __metadata("design:returntype", void 0)
+], PlayersController.prototype, "updateManualPoints", null);
 exports.PlayersController = PlayersController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('championships/:championshipId/players'),

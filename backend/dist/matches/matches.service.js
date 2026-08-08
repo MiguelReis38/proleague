@@ -57,6 +57,21 @@ let MatchesService = class MatchesService {
             }
         });
     }
+    async borrowPlayer(teamId, playerId) {
+        return this.prisma.teamPlayer.create({
+            data: {
+                teamId,
+                playerId,
+                isBorrowed: true
+            }
+        });
+    }
+    async updateTeamPhoto(teamId, photoUrl) {
+        return this.prisma.team.update({
+            where: { id: teamId },
+            data: { photoUrl }
+        });
+    }
 };
 exports.MatchesService = MatchesService;
 exports.MatchesService = MatchesService = __decorate([

@@ -22,4 +22,7 @@ export declare class AuthService {
             email: string;
         };
     }>;
+    resetPassword(email: string, newPassword: string): Promise<{
+        message: string;
+    }>;
 }

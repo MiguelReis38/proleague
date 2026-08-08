@@ -106,6 +106,21 @@ let AuthService = class AuthService {
             }
         };
     }
+    async resetPassword(email, newPassword) {
+        const user = await this.prisma.user.findUnique({
+            where: { email }
+        });
+        if (!user) {
+            throw new common_1.UnauthorizedException('E-mail não encontrado no sistema');
+        }
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+        await this.prisma.user.update({
+            where: { email },
+            data: { passwordHash }
+        });
+        return { message: 'Senha redefinida com sucesso! Faça login com a nova senha.' };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

@@ -34,6 +34,20 @@ let ReportsController = class ReportsController {
             throw new common_1.NotFoundException('Erro ao gerar relatório do campeonato');
         }
     }
+    async getLeaderboardReport(id, leaderboard, scorers, goalkeepers, res) {
+        try {
+            const pdfBuffer = await this.reportsService.generateLeaderboardPDF(id, leaderboard || [], scorers || [], goalkeepers || []);
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename=classificacao.pdf',
+                'Content-Length': pdfBuffer.length,
+            });
+            res.end(pdfBuffer);
+        }
+        catch (error) {
+            throw new common_1.NotFoundException('Erro ao gerar PDF de classificação');
+        }
+    }
 };
 exports.ReportsController = ReportsController;
 __decorate([
@@ -44,6 +58,17 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getChampionshipReport", null);
+__decorate([
+    (0, common_1.Post)('championship/:id/leaderboard'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('leaderboard')),
+    __param(2, (0, common_1.Body)('scorers')),
+    __param(3, (0, common_1.Body)('goalkeepers')),
+    __param(4, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Array, Array, Array, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getLeaderboardReport", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.Controller)('reports'),
     __metadata("design:paramtypes", [reports_service_1.ReportsService])

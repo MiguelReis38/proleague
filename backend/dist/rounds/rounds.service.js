@@ -103,6 +103,30 @@ let RoundsService = class RoundsService {
             teamIndex = (teamIndex + 1) % teams.length;
         }
     }
+    async delete(userId, roundId) {
+        const round = await this.prisma.round.findFirst({
+            where: { id: roundId, championship: { userId } }
+        });
+        if (!round)
+            throw new common_1.NotFoundException('Round not found');
+        return this.prisma.round.delete({ where: { id: roundId } });
+    }
+    async close(userId, roundId) {
+        const round = await this.prisma.round.findFirst({
+            where: { id: roundId, championship: { userId } }
+        });
+        if (!round)
+            throw new common_1.NotFoundException('Round not found');
+        return this.prisma.round.update({ where: { id: roundId }, data: { closed: true } });
+    }
+    async reopen(userId, roundId) {
+        const round = await this.prisma.round.findFirst({
+            where: { id: roundId, championship: { userId } }
+        });
+        if (!round)
+            throw new common_1.NotFoundException('Round not found');
+        return this.prisma.round.update({ where: { id: roundId }, data: { closed: false } });
+    }
     async findAllByChampionship(userId, championshipId) {
         return this.prisma.round.findMany({
             where: { championshipId, championship: { userId } },

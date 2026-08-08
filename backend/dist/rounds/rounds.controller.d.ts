@@ -34,11 +34,11 @@ export declare class RoundsController {
             createdAt: Date;
             updatedAt: Date;
             status: string;
+            roundId: string;
             homeTeamId: string;
             awayTeamId: string;
             homeScore: number;
             awayScore: number;
-            roundId: string;
         })[];
         teams: ({
             players: ({
@@ -52,12 +52,14 @@ export declare class RoundsController {
                     photoUrl: string | null;
                     category: string;
                     birthDate: Date;
+                    manualPoints: number;
                     championshipId: string;
                 };
             } & {
                 id: string;
-                playerId: string;
                 teamId: string;
+                playerId: string;
+                isBorrowed: boolean;
             })[];
         } & {
             name: string;
@@ -75,4 +77,28 @@ export declare class RoundsController {
         championshipId: string;
         closed: boolean;
     })[]>;
+    deleteRound(req: any, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
+    closeRound(req: any, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
+    reopenRound(req: any, roundId: string): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        championshipId: string;
+        closed: boolean;
+    }>;
 }

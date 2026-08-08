@@ -13,6 +13,7 @@ export declare class PlayersController {
         photoUrl: string | null;
         category: string;
         birthDate: Date;
+        manualPoints: number;
         championshipId: string;
     }>;
     findAll(req: any, championshipId: string): Promise<{
@@ -25,6 +26,7 @@ export declare class PlayersController {
         photoUrl: string | null;
         category: string;
         birthDate: Date;
+        manualPoints: number;
         championshipId: string;
     }[]>;
     remove(req: any, championshipId: string, id: string): Promise<{
@@ -37,6 +39,33 @@ export declare class PlayersController {
         photoUrl: string | null;
         category: string;
         birthDate: Date;
+        manualPoints: number;
+        championshipId: string;
+    }>;
+    update(req: any, championshipId: string, id: string, updateData: any): Promise<{
+        number: number | null;
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        active: boolean;
+        photoUrl: string | null;
+        category: string;
+        birthDate: Date;
+        manualPoints: number;
+        championshipId: string;
+    }>;
+    updateManualPoints(req: any, championshipId: string, id: string, points: number): Promise<{
+        number: number | null;
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        active: boolean;
+        photoUrl: string | null;
+        category: string;
+        birthDate: Date;
+        manualPoints: number;
         championshipId: string;
     }>;
 }

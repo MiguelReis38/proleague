@@ -16,34 +16,46 @@ exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
-const uuid_1 = require("uuid");
-const path_1 = require("path");
 let UploadController = class UploadController {
-    uploadFile(file) {
+    async uploadFile(file) {
         if (!file) {
             throw new common_1.BadRequestException('Nenhum arquivo enviado');
         }
-        return {
-            url: `/uploads/${file.filename}`
-        };
+        try {
+            const apiKey = "8166b3054b13a77ee652fc69e7eeaecd";
+            const base64Image = file.buffer.toString('base64');
+            const formData = new URLSearchParams();
+            formData.append('image', base64Image);
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            if (data.success) {
+                return {
+                    url: data.data.url
+                };
+            }
+            else {
+                throw new common_1.BadRequestException('Falha no upload de imagem');
+            }
+        }
+        catch (error) {
+            console.error(error);
+            throw new common_1.BadRequestException('Erro de comunicação com o servidor de imagens');
+        }
     }
 };
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
-        storage: (0, multer_1.diskStorage)({
-            destination: './uploads',
-            filename: (req, file, cb) => {
-                const uniqueSuffix = (0, uuid_1.v4)() + (0, path_1.extname)(file.originalname);
-                cb(null, uniqueSuffix);
-            }
-        })
+        storage: (0, multer_1.memoryStorage)()
     })),
     __param(0, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadFile", null);
 exports.UploadController = UploadController = __decorate([
     (0, common_1.Controller)('upload')

@@ -19,6 +19,8 @@ const matches_module_1 = require("./matches/matches.module");
 const upload_module_1 = require("./upload/upload.module");
 const reports_module_1 = require("./reports/reports.module");
 const payments_module_1 = require("./payments/payments.module");
+const public_module_1 = require("./public/public.module");
+const finance_module_1 = require("./finance/finance.module");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
 let AppModule = class AppModule {
@@ -40,6 +42,8 @@ exports.AppModule = AppModule = __decorate([
             upload_module_1.UploadModule,
             reports_module_1.ReportsModule,
             payments_module_1.PaymentsModule,
+            public_module_1.PublicModule,
+            finance_module_1.FinanceModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
