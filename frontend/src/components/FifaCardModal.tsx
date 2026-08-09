@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Share2, Flame } from "lucide-react";
+import { X, Share2, Flame, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type PlayerStats = {
@@ -44,6 +44,14 @@ export function FifaCardModal({
 
   const pos = categoryLabel[player.category] || "JOG";
 
+  // Atributos FUT dinâmicos
+  const pac = Math.min(99, 78 + (player.wins || 0) * 2);
+  const sho = Math.min(99, 70 + (player.goals || 0) * 4);
+  const pas = Math.min(99, 75 + (player.assists || 0) * 3 + Math.floor(player.points / 2));
+  const dri = Math.min(99, 80 + (player.goals || 0) * 2);
+  const def = player.category === "GOALKEEPER" ? Math.min(99, 82 + (player.saves || 0) * 3) : 74;
+  const phy = Math.min(99, 82 + (player.wins || 0) * 2);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="relative flex flex-col items-center">
@@ -57,7 +65,7 @@ export function FifaCardModal({
         {/* CARD ESTILO EA FC / FIFA */}
         <div
           id="fifa-card"
-          className="w-72 h-[430px] rounded-3xl p-5 relative flex flex-col justify-between shadow-2xl overflow-hidden border-2 border-amber-400/60 bg-gradient-to-b from-amber-900/90 via-zinc-950 to-black text-amber-100"
+          className="w-80 h-[480px] rounded-3xl p-5 relative flex flex-col justify-between shadow-2xl overflow-hidden border-2 border-amber-400/60 bg-gradient-to-b from-amber-900/90 via-zinc-950 to-black text-amber-100"
         >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/20 via-transparent to-transparent pointer-events-none" />
 
@@ -81,8 +89,8 @@ export function FifaCardModal({
           </div>
 
           {/* Foto do Jogador */}
-          <div className="my-2 flex justify-center z-10">
-            <div className="w-28 h-28 rounded-full border-4 border-amber-400/50 shadow-2xl overflow-hidden bg-zinc-900 flex items-center justify-center">
+          <div className="my-1 flex justify-center z-10">
+            <div className="w-28 h-28 rounded-full border-4 border-amber-400/60 shadow-2xl overflow-hidden bg-zinc-900 flex items-center justify-center">
               {player.photoUrl ? (
                 <img
                   src={player.photoUrl}
@@ -109,25 +117,47 @@ export function FifaCardModal({
 
           <div className="border-t border-amber-500/30 my-1 z-10" />
 
-          {/* Atributos Grid */}
-          <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold z-10 pb-2">
-            <div className="bg-amber-950/40 border border-amber-500/20 rounded-lg py-1.5">
-              <span className="block text-amber-300 text-sm font-black">
-                {player.points}
-              </span>
-              <span className="text-[9px] text-amber-200/60 uppercase">PTS</span>
+          {/* FUT STATS GRID (PAC, SHO, PAS, DRI, DEF, PHY) */}
+          <div className="grid grid-cols-6 gap-1 text-center z-10 bg-amber-950/40 border border-amber-500/20 rounded-xl p-2">
+            <div>
+              <span className="block text-sm font-black text-amber-300">{pac}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">PAC</span>
             </div>
-            <div className="bg-amber-950/40 border border-amber-500/20 rounded-lg py-1.5">
-              <span className="block text-amber-300 text-sm font-black">
-                {player.goals}
-              </span>
-              <span className="text-[9px] text-amber-200/60 uppercase">GOLS</span>
+            <div>
+              <span className="block text-sm font-black text-amber-300">{sho}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">SHO</span>
             </div>
-            <div className="bg-amber-950/40 border border-amber-500/20 rounded-lg py-1.5">
-              <span className="block text-amber-300 text-sm font-black">
-                {player.wins}
-              </span>
-              <span className="text-[9px] text-amber-200/60 uppercase">VÍT</span>
+            <div>
+              <span className="block text-sm font-black text-amber-300">{pas}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">PAS</span>
+            </div>
+            <div>
+              <span className="block text-sm font-black text-amber-300">{dri}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">DRI</span>
+            </div>
+            <div>
+              <span className="block text-sm font-black text-amber-300">{def}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">DEF</span>
+            </div>
+            <div>
+              <span className="block text-sm font-black text-amber-300">{phy}</span>
+              <span className="text-[9px] text-amber-200/60 font-bold">PHY</span>
+            </div>
+          </div>
+
+          {/* Resumo de Pontos & Gols */}
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold z-10 pb-1">
+            <div className="bg-black/40 border border-amber-500/20 rounded-lg py-1">
+              <span className="block text-amber-300 text-xs font-black">{player.points}</span>
+              <span className="text-[9px] text-amber-200/60">PTS</span>
+            </div>
+            <div className="bg-black/40 border border-amber-500/20 rounded-lg py-1">
+              <span className="block text-amber-300 text-xs font-black">{player.goals}</span>
+              <span className="text-[9px] text-amber-200/60">GOLS</span>
+            </div>
+            <div className="bg-black/40 border border-amber-500/20 rounded-lg py-1">
+              <span className="block text-amber-300 text-xs font-black">{player.wins}</span>
+              <span className="text-[9px] text-amber-200/60">VÍT</span>
             </div>
           </div>
         </div>
@@ -135,10 +165,12 @@ export function FifaCardModal({
         {/* Botão de Compartilhar */}
         <div className="flex gap-2 mt-4">
           <Button
-            onClick={() => alert("Tire um print para compartilhar no seu Instagram Stories ou WhatsApp!")}
-            className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs"
+            onClick={() =>
+              alert("Tire um print da tela para compartilhar este Card no seu WhatsApp ou Instagram Stories!")
+            }
+            className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs shadow-lg shadow-amber-950"
           >
-            <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar Card
+            <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar Card no WhatsApp
           </Button>
         </div>
       </div>
