@@ -23,6 +23,8 @@ import {
   Send,
   Lock,
   Menu,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,9 @@ import { Label } from "@/components/ui/label";
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // FAQ Accordion State
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Contact form state
   const [contactName, setContactName] = useState("");
@@ -55,6 +60,29 @@ export default function LandingPage() {
       setContactSuccess(false);
     }, 4000);
   };
+
+  const faqItems = [
+    {
+      q: "O ProLeague é gratuito?",
+      a: "Sim! Você pode criar sua conta gratuitamente e testar seu primeiro campeonato com até 15 jogadores sem pagar nada. Para campeonatos maiores e ilimitados, temos os planos PRO e Premium.",
+    },
+    {
+      q: "Como funciona o Sorteio Inteligente de Equipes?",
+      a: "Você cadastra os atletas e define o nível de cada um (Categoria A, B, C e Goleiros). Ao clicar em 'Sortear Rodada', nosso algoritmo sorteia times matematicamente equilibrados para garantir partidas disputadas e sem 'panela'.",
+    },
+    {
+      q: "Como os jogadores e a torcida acompanham a classificação?",
+      a: "Cada campeonato possui um Link Público exclusivo e um QR Code automático. Basta enviar o link no grupo do WhatsApp dos atletas. Ninguém precisa criar conta para visualizar a tabela!",
+    },
+    {
+      q: "Posso exportar o relatório oficial do campeonato em PDF?",
+      a: "Com certeza! Em 1 clique você gera o relatório oficial em PDF com a tabela de classificação, artilharia, luva de ouro e a marca oficial do desenvolvedor Miguel Reis.",
+    },
+    {
+      q: "Funciona no celular durante os jogos?",
+      a: "Sim! O ProLeague possui design 100% responsivo para smartphone e aplicativo nativo Android/iOS. Você apita o jogo e insere gols diretamente da quadra.",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-black">
@@ -82,6 +110,9 @@ export default function LandingPage() {
             </a>
             <a href="#manual" className="hover:text-white transition-colors">
               Manual do Sistema
+            </a>
+            <a href="#faq" className="hover:text-white transition-colors">
+              Dúvidas (FAQ)
             </a>
             <a href="#sobre" className="hover:text-white transition-colors">
               Sobre Nós
@@ -143,6 +174,13 @@ export default function LandingPage() {
               className="block text-zinc-300 py-2 hover:text-white"
             >
               Manual do Sistema
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-zinc-300 py-2 hover:text-white"
+            >
+              Dúvidas (FAQ)
             </a>
             <a
               href="#sobre"
@@ -374,46 +412,92 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── SEÇÃO: SOBRE NÓS ────────────────────────────────────────────────── */}
-      <section id="sobre" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
-              <ShieldCheck className="w-4 h-4" /> Desenvolvido por Miguel Reis
-            </div>
-            <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              Criado para transformar o futebol amador.
-            </h3>
-            <p className="text-zinc-400 text-base leading-relaxed">
-              O **ProLeague** nasceu da necessidade real de organizadores de futebol de salão,
-              campo e society que perdiam horas organizando tabelas em papel ou planilhas de Excel.
-            </p>
-            <p className="text-zinc-400 text-base leading-relaxed">
-              Desenvolvido com tecnologia de ponta por **Miguel Reis**, a missão do ProLeague é dar
-              uma experiência profissional de Champions League a qualquer racha ou campeonato do
-              Brasil!
-            </p>
-          </div>
+      {/* ─── SEÇÃO: FAQ (PERGUNTAS FREQUENTES) ──────────────────────────────── */}
+      <section id="faq" className="py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16 space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+            Dúvidas Frequentes
+          </h2>
+          <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
+            Perguntas & Respostas Frequentes
+          </h3>
+        </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl space-y-6 relative overflow-hidden shadow-2xl">
-            <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
-              <Trophy className="w-8 h-8 text-zinc-950 stroke-[2.5]" />
+        <div className="space-y-4">
+          {faqItems.map((item, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={idx}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden transition-all"
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="w-full p-5 text-left font-bold text-white flex justify-between items-center hover:bg-zinc-800/50 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <HelpCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+                    {item.q}
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-emerald-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-zinc-400 shrink-0" />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 pt-1 text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/60 bg-zinc-950/40">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ─── SEÇÃO: SOBRE NÓS ────────────────────────────────────────────────── */}
+      <section id="sobre" className="py-24 bg-zinc-900/40 border-t border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                <ShieldCheck className="w-4 h-4" /> Desenvolvido por Miguel Reis
+              </div>
+              <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                Criado para transformar o futebol amador.
+              </h3>
+              <p className="text-zinc-400 text-base leading-relaxed">
+                O **ProLeague** nasceu da necessidade real de organizadores de futebol de salão,
+                campo e society que perdiam horas organizando tabelas em papel ou planilhas de Excel.
+              </p>
+              <p className="text-zinc-400 text-base leading-relaxed">
+                Desenvolvido com tecnologia de ponta por **Miguel Reis**, a missão do ProLeague é dar
+                uma experiência profissional de Champions League a qualquer racha ou campeonato do
+                Brasil!
+              </p>
             </div>
-            <h4 className="text-2xl font-bold text-white">Por que o ProLeague é diferente?</h4>
-            <ul className="space-y-3 text-sm text-zinc-300">
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                Sem desequilíbrio: Algoritmo inteligente de distribuição.
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                Link Público sem login para a torcida e atletas acompanharem.
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                Gestão financeira completa de mensalidades e despesas.
-              </li>
-            </ul>
+
+            <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl space-y-6 relative overflow-hidden shadow-2xl">
+              <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+                <Trophy className="w-8 h-8 text-zinc-950 stroke-[2.5]" />
+              </div>
+              <h4 className="text-2xl font-bold text-white">Por que o ProLeague é diferente?</h4>
+              <ul className="space-y-3 text-sm text-zinc-300">
+                <li className="flex items-center gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  Sem desequilíbrio: Algoritmo inteligente de distribuição.
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  Link Público sem login para a torcida e atletas acompanharem.
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  Gestão financeira completa de mensalidades e despesas.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

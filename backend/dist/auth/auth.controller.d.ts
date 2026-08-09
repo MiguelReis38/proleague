@@ -26,4 +26,10 @@ export declare class AuthController {
     }): Promise<{
         message: string;
     }>;
+    changePassword(req: any, data: {
+        currentPassword: string;
+        newPassword: string;
+    }): Promise<{
+        message: string;
+    }>;
 }

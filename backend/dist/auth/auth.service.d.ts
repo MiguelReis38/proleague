@@ -25,4 +25,7 @@ export declare class AuthService {
     resetPassword(email: string, newPassword: string): Promise<{
         message: string;
     }>;
+    changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{
+        message: string;
+    }>;
 }

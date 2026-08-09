@@ -121,6 +121,21 @@ let AuthService = class AuthService {
         });
         return { message: 'Senha redefinida com sucesso! Faça login com a nova senha.' };
     }
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new common_1.UnauthorizedException('Usuário não encontrado');
+        const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!isValid)
+            throw new common_1.UnauthorizedException('Senha atual incorreta');
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash }
+        });
+        return { message: 'Senha alterada com sucesso!' };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
