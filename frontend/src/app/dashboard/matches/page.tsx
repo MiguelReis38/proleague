@@ -18,10 +18,12 @@ import {
   X,
   Flame,
   QrCode,
+  Star,
 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { TotwModal } from "@/components/TotwModal";
 
 type RoundGroup = {
   id: string;
@@ -40,6 +42,9 @@ export default function MatchesGlobalPage() {
 
   // Matchday Banner Modal State
   const [bannerRound, setBannerRound] = useState<RoundGroup | null>(null);
+
+  // Seleção da Rodada (TOTW) Modal State
+  const [totwRound, setTotwRound] = useState<RoundGroup | null>(null);
 
   const handleDeleteRound = async (round: RoundGroup) => {
     if (
@@ -226,7 +231,21 @@ export default function MatchesGlobalPage() {
                       title="Gerar banner visual com todos os jogos para WhatsApp e Instagram"
                     >
                       <Sparkles className="w-3.5 h-3.5 mr-1 text-zinc-950 fill-zinc-950" />
-                      Banner da Rodada
+                      Banner
+                    </Button>
+
+                    {/* BOTÃO PARA GERAR SELEÇÃO DA RODADA */}
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs bg-yellow-400 hover:bg-yellow-500 text-zinc-950 font-extrabold shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTotwRound(round);
+                      }}
+                      title="Exibir os melhores jogadores e goleiros da rodada"
+                    >
+                      <Star className="w-3.5 h-3.5 mr-1 fill-zinc-950" />
+                      Seleção
                     </Button>
 
                     <Link
@@ -427,6 +446,11 @@ export default function MatchesGlobalPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── MODAL SELEÇÃO DA RODADA (TOTW) ─────────────────────────────── */}
+      {totwRound && (
+        <TotwModal round={totwRound} onClose={() => setTotwRound(null)} />
       )}
     </div>
   );
