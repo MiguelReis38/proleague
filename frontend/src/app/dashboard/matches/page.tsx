@@ -19,6 +19,7 @@ import {
   Flame,
   QrCode,
   Star,
+  Printer,
 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import Link from "next/link";
@@ -431,17 +432,46 @@ export default function MatchesGlobalPage() {
               </div>
             </div>
 
-            {/* Ação de Compartilhar */}
-            <div className="flex gap-2 mt-4 w-full">
+            {/* Ações do Banner: Imprimir e Compartilhar */}
+            <div className="grid grid-cols-2 gap-2 mt-4 w-full">
+              <Button
+                onClick={() => {
+                  const printWin = window.open("", "_blank");
+                  const bannerHtml = document.getElementById("matchday-banner")?.outerHTML || "";
+                  if (printWin) {
+                    printWin.document.write(`
+                      <html>
+                        <head>
+                          <title>Banner da Rodada - ProLeague</title>
+                          <script src="https://cdn.tailwindcss.com"></script>
+                        </head>
+                        <body class="bg-black text-white flex flex-col items-center justify-center p-6">
+                          <h3 class="mb-4 text-sm font-bold text-zinc-400">ProLeague - Banner da Rodada</h3>
+                          <div class="max-w-md w-full">
+                            ${bannerHtml}
+                          </div>
+                          <script>setTimeout(() => { window.print(); }, 600);</script>
+                        </body>
+                      </html>
+                    `);
+                    printWin.document.close();
+                  }
+                }}
+                variant="outline"
+                className="border-zinc-700 text-zinc-200 hover:bg-zinc-800 font-bold text-xs py-2.5"
+              >
+                <Printer className="w-4 h-4 mr-1.5 text-amber-400" /> Imprimir Banner
+              </Button>
+
               <Button
                 onClick={() =>
                   alert(
-                    "Tire um print desta tela no seu celular ou computador para enviar o Banner completo de jogos no WhatsApp da galera ou publicar no Instagram!"
+                    "Tire um print desta tela no celular ou computador para salvar a imagem e enviar no WhatsApp ou Instagram!"
                   )
                 }
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-sm py-3 shadow-lg shadow-emerald-950"
+                className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs py-2.5 shadow-lg shadow-emerald-950"
               >
-                <Share2 className="w-4 h-4 mr-2" /> Tirar Print / Compartilhar no WhatsApp
+                <Share2 className="w-4 h-4 mr-1.5" /> Gerar Imagem / Print
               </Button>
             </div>
           </div>
