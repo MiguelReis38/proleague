@@ -1,7 +1,8 @@
 "use client";
 
-import { X, Share2, Flame, Zap } from "lucide-react";
+import { X, Share2, Flame, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import html2canvas from "html2canvas";
 
 type PlayerStats = {
   name: string;
@@ -51,6 +52,28 @@ export function FifaCardModal({
   const dri = Math.min(99, 80 + (player.goals || 0) * 2);
   const def = player.category === "GOALKEEPER" ? Math.min(99, 82 + (player.saves || 0) * 3) : 74;
   const phy = Math.min(99, 82 + (player.wins || 0) * 2);
+
+  const handleDownloadCard = async () => {
+    const elem = document.getElementById("fifa-card");
+    if (!elem) return;
+    try {
+      const canvas = await html2canvas(elem, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: null,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `card_${player.name.toLowerCase().replace(/\s+/g, "_")}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error(err);
+      alert("Tire um print da tela para salvar a imagem do Card!");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
@@ -162,15 +185,23 @@ export function FifaCardModal({
           </div>
         </div>
 
-        {/* Botão de Compartilhar */}
-        <div className="flex gap-2 mt-4">
+        {/* Botões de Ação: Baixar Imagem & Compartilhar */}
+        <div className="grid grid-cols-2 gap-2 mt-4 w-full">
+          <Button
+            onClick={handleDownloadCard}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-extrabold text-xs shadow-lg shadow-amber-950"
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Baixar Imagem (PNG)
+          </Button>
+
           <Button
             onClick={() =>
-              alert("Tire um print da tela para compartilhar este Card no seu WhatsApp ou Instagram Stories!")
+              alert("Tire um print da tela para enviar o Card no WhatsApp ou postar no Instagram!")
             }
-            className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs shadow-lg shadow-amber-950"
+            variant="outline"
+            className="border-amber-500/50 text-amber-300 hover:bg-amber-950/60 font-bold text-xs"
           >
-            <Share2 className="w-3.5 h-3.5 mr-1.5" /> Compartilhar Card no WhatsApp
+            <Share2 className="w-4 h-4 mr-1.5" /> WhatsApp
           </Button>
         </div>
       </div>

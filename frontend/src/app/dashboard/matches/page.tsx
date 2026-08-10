@@ -20,11 +20,13 @@ import {
   QrCode,
   Star,
   Printer,
+  Download,
 } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TotwModal } from "@/components/TotwModal";
+import html2canvas from "html2canvas";
 
 type RoundGroup = {
   id: string;
@@ -464,14 +466,26 @@ export default function MatchesGlobalPage() {
               </Button>
 
               <Button
-                onClick={() =>
-                  alert(
-                    "Tire um print desta tela no celular ou computador para salvar a imagem e enviar no WhatsApp ou Instagram!"
-                  )
-                }
+                onClick={async () => {
+                  const elem = document.getElementById("matchday-banner");
+                  if (!elem) return;
+                  try {
+                    const canvas = await html2canvas(elem, { scale: 3, useCORS: true, backgroundColor: null });
+                    const dataUrl = canvas.toDataURL("image/png");
+                    const link = document.createElement("a");
+                    link.href = dataUrl;
+                    link.download = `banner_rodada_${bannerRound.number}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  } catch (err) {
+                    console.error(err);
+                    alert("Tire um print para salvar a imagem do Banner!");
+                  }
+                }}
                 className="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs py-2.5 shadow-lg shadow-emerald-950"
               >
-                <Share2 className="w-4 h-4 mr-1.5" /> Gerar Imagem / Print
+                <Download className="w-4 h-4 mr-1.5" /> Baixar Imagem (PNG)
               </Button>
             </div>
           </div>

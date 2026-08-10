@@ -1,7 +1,8 @@
 "use client";
 
-import { X, Share2, Flame, Trophy, Star, Award, Zap } from "lucide-react";
+import { X, Share2, Flame, Trophy, Star, Award, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import html2canvas from "html2canvas";
 
 type TotwPlayer = {
   id: string;
@@ -238,17 +239,38 @@ export function TotwModal({
           </div>
         </div>
 
-        {/* Botão de Ação */}
-        <div className="flex gap-2 mt-4 w-full">
+        {/* Botão de Ação: Baixar Imagem & Compartilhar */}
+        <div className="grid grid-cols-2 gap-2 mt-4 w-full">
+          <Button
+            onClick={async () => {
+              const elem = document.getElementById("totw-card");
+              if (!elem) return;
+              try {
+                const canvas = await html2canvas(elem, { scale: 3, useCORS: true, backgroundColor: null });
+                const dataUrl = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+                link.href = dataUrl;
+                link.download = `selecao_rodada_${round.number}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              } catch {
+                alert("Tire um print da tela para salvar a imagem da Seleção!");
+              }
+            }}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-extrabold text-xs shadow-lg shadow-amber-950"
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Baixar Imagem (PNG)
+          </Button>
+
           <Button
             onClick={() =>
-              alert(
-                "Tire um print desta tela para postar no seu Instagram Stories ou enviar o Time da Rodada no WhatsApp da galera!"
-              )
+              alert("Tire um print da tela para postar no Instagram Stories ou enviar o Time da Rodada no WhatsApp da galera!")
             }
-            className="w-full bg-amber-500 hover:bg-amber-600 text-black font-extrabold text-sm py-3 shadow-lg shadow-amber-950"
+            variant="outline"
+            className="border-amber-500/50 text-amber-300 hover:bg-amber-950/60 font-bold text-xs"
           >
-            <Share2 className="w-4 h-4 mr-2" /> Compartilhar Seleção no WhatsApp
+            <Share2 className="w-4 h-4 mr-1.5" /> WhatsApp
           </Button>
         </div>
       </div>
