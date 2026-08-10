@@ -32,6 +32,9 @@ let PublicController = class PublicController {
     async getGoalkeepers(id) {
         return this.publicService.getPublicGoalkeepers(id);
     }
+    async getStats() {
+        return this.publicService.getGlobalSystemStats();
+    }
 };
 exports.PublicController = PublicController;
 __decorate([
@@ -55,6 +58,12 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PublicController.prototype, "getGoalkeepers", null);
+__decorate([
+    (0, common_1.Get)('stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PublicController.prototype, "getStats", null);
 exports.PublicController = PublicController = __decorate([
     (0, common_1.Controller)('public'),
     __metadata("design:paramtypes", [public_service_1.PublicService])

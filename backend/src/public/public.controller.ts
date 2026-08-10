@@ -21,4 +21,9 @@ export class PublicController {
   async getGoalkeepers(@Param('id') id: string) {
     return this.publicService.getPublicGoalkeepers(id);
   }
+
+  @Get('stats')
+  async getStats() {
+    return this.publicService.getGlobalSystemStats();
+  }
 }

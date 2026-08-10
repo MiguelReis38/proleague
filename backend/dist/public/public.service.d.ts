@@ -47,4 +47,12 @@ export declare class PublicService {
         number: number | null | undefined;
         saves: number;
     }[]>;
+    getGlobalSystemStats(): Promise<{
+        totalPlayers: number;
+        totalRounds: number;
+        totalChampionships: number;
+        totalMatches: number;
+        satisfactionRate: string;
+        rulesTransparency: string;
+    }>;
 }

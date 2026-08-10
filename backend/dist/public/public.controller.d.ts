@@ -47,4 +47,12 @@ export declare class PublicController {
         number: number | null | undefined;
         saves: number;
     }[]>;
+    getStats(): Promise<{
+        totalPlayers: number;
+        totalRounds: number;
+        totalChampionships: number;
+        totalMatches: number;
+        satisfactionRate: string;
+        rulesTransparency: string;
+    }>;
 }
