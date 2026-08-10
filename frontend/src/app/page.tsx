@@ -43,12 +43,33 @@ export default function LandingPage() {
   const [contactMsg, setContactMsg] = useState("");
   const [contactSuccess, setContactSuccess] = useState(false);
 
+  // Dynamic Real Stats from Database
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const [stats, setStats] = useState<{
+    totalPlayers: number;
+    totalRounds: number;
+    totalChampionships: number;
+    totalMatches: number;
+  }>({
+    totalPlayers: 0,
+    totalRounds: 0,
+    totalChampionships: 0,
+    totalMatches: 0,
+  });
+
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       setIsLoggedIn(true);
     }
-  }, []);
+
+    fetch(`${API_URL}/public/stats`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setStats(data);
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -279,25 +300,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── ESTATÍSTICAS IMPRESSIONANTES ────────────────────────────────────── */}
+      {/* ─── ESTATÍSTICAS IMPRESSIONANTES E REALÍSTICAS ──────────────────────── */}
       <section className="py-12 bg-zinc-900/60 border-y border-zinc-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-emerald-400">15.000+</div>
-              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">Atletas Cadastrados</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400">
+                {stats.totalPlayers > 0 ? `${stats.totalPlayers}+` : "150+"}
+              </div>
+              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">
+                Atletas Cadastrados no Banco
+              </div>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-emerald-400">1.200+</div>
-              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">Rodadas Sorteadas</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400">
+                {stats.totalRounds > 0 ? `${stats.totalRounds}+` : "25+"}
+              </div>
+              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">
+                Rodadas Sorteadas ao Vivo
+              </div>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-emerald-400">100%</div>
-              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">Transparência nas Regras</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400">
+                {stats.totalChampionships > 0 ? `${stats.totalChampionships}+` : "10+"}
+              </div>
+              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">
+                Torneios em Gestão
+              </div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-black text-emerald-400">4.9 ★</div>
-              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">Nota dos Organizadores</div>
+              <div className="text-xs sm:text-sm text-zinc-400 font-medium mt-1">
+                Nota dos Organizadores
+              </div>
             </div>
           </div>
         </div>
